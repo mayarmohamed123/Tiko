@@ -1,98 +1,184 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import api from '../api/axios';
+import interiorDesign from '../assets/Interior Design.webp';
 
-const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import { registerSchema, type RegisterFormValues } from '../utils/validation';
 
 const RegisterPage: React.FC = () => {
-  const navigate = useNavigate();
-
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: RegisterFormValues) => api.post('/auth/register', data),
-    onSuccess: () => {
-      toast.success('Registration successful! Please login.');
-      navigate('/login');
-    },
-    onError: (error: { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Registration failed');
-    },
-  });
-
   const onSubmit = (data: RegisterFormValues) => {
-    mutation.mutate(data);
+    console.log('Registration data:', data);
+    toast.success('Static registration successful (Demo)');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">Create your account</h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
-              Sign in here
-            </Link>
+    <div className="h-screen flex bg-tiko-surface font-dm-sans text-tiko-on-surface overflow-hidden">
+
+      {/* Left Side: Branding & Image — hidden on mobile/tablet, visible on lg+ */}
+      <div className="hidden lg:flex lg:w-5/12 flex-col items-center justify-center gap-6 p-10 bg-tiko-surface-container-low border-r border-tiko-outline-variant">
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex items-center gap-2">
+            <span className="text-tiko-primary">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+              </svg>
+            </span>
+            <span className="text-4xl font-outfit font-bold text-tiko-primary tracking-tight">Tiko</span>
+          </div>
+          <p className="text-sm text-tiko-on-surface-variant max-w-xs">
+            Quiet Luxury meets Neighborhood Warmth. Join our community for a curated shopping experience.
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300">Full Name</label>
-              <input
-                {...register('name')}
-                type="text"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
-                placeholder="John Doe"
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300">Email address</label>
-              <input
-                {...register('email')}
-                type="email"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
-                placeholder="you@example.com"
-              />
-              {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300">Password</label>
-              <input
-                {...register('password')}
-                type="password"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
-                placeholder="••••••••"
-              />
-              {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
-            </div>
+
+        {/* Image */}
+        <div className="relative w-full max-w-sm group">
+          <img
+            src={interiorDesign}
+            alt="Interior Design"
+            className="w-full h-auto rounded-tiko-lg object-cover shadow-xl transition-transform duration-700 group-hover:scale-[1.02]"
+          />
+          <div className="absolute inset-0 rounded-tiko-lg ring-1 ring-inset ring-black/5"></div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-[9px] font-outfit font-bold text-tiko-on-surface-variant uppercase tracking-widest">
+          © 2024 Tiko. All rights reserved.
+        </p>
+      </div>
+
+      {/* Right Side: Form Section */}
+      <div className="w-full lg:w-7/12 flex flex-col justify-center p-6 sm:p-10 lg:p-12 bg-tiko-surface overflow-y-auto">
+        <div className="max-w-xl w-full mx-auto space-y-6">
+
+          {/* On mobile: show minimal logo since left panel is hidden */}
+          <div className="flex items-center gap-2 lg:hidden mb-4">
+            <span className="text-tiko-primary">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+              </svg>
+            </span>
+            <span className="text-2xl font-outfit font-bold text-tiko-primary tracking-tight">Tiko</span>
           </div>
 
-          <div>
-            <button
-              disabled={mutation.isPending}
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50"
-            >
-              {mutation.isPending ? 'Creating account...' : 'Create account'}
-            </button>
+          <div className="space-y-2">
+            <h2 className="text-3xl lg:text-4xl font-outfit font-bold text-tiko-on-surface">Create Account</h2>
+            <p className="text-sm lg:text-base text-tiko-on-surface-variant">
+              Fill in your details to get started with{' '}
+              <span className="text-tiko-primary font-semibold">Tiko</span>.
+            </p>
           </div>
-        </form>
+
+          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+            {/* Row 1: Full Name + Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold font-outfit text-tiko-on-surface">Full Name</label>
+                <input
+                  {...register('fullName')}
+                  type="text"
+                  className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                  placeholder="E.g. Jane Doe"
+                />
+                {errors.fullName && <p className="text-xs text-tiko-error">{errors.fullName.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold font-outfit text-tiko-on-surface">Email Address</label>
+                <input
+                  {...register('email')}
+                  type="email"
+                  className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                  placeholder="jane@example.com"
+                />
+                {errors.email && <p className="text-xs text-tiko-error">{errors.email.message}</p>}
+              </div>
+            </div>
+
+            {/* Row 2: Phone Number */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold font-outfit text-tiko-on-surface">Phone Number</label>
+              <input
+                {...register('phone')}
+                type="tel"
+                className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                placeholder="+20 111 111 1111"
+              />
+              {errors.phone && <p className="text-xs text-tiko-error">{errors.phone.message}</p>}
+            </div>
+
+            {/* Row 3: Password + Confirm */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold font-outfit text-tiko-on-surface">Password</label>
+                <div className="relative">
+                  <input
+                    {...register('password')}
+                    type="password"
+                    className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                    placeholder="••••••••"
+                  />
+                  <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-tiko-on-surface-variant hover:text-tiko-on-surface transition-colors">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                {errors.password && <p className="text-xs text-tiko-error">{errors.password.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold font-outfit text-tiko-on-surface">Confirm Password</label>
+                <div className="relative">
+                  <input
+                    {...register('confirmPassword')}
+                    type="password"
+                    className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                    placeholder="••••••••"
+                  />
+                  <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-tiko-on-surface-variant hover:text-tiko-on-surface transition-colors">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-xs text-tiko-error">{errors.confirmPassword.message}</p>}
+              </div>
+            </div>
+
+            {/* Row 4: Address */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold font-outfit text-tiko-on-surface">Address/Delivery Location</label>
+              <textarea
+                {...register('address')}
+                rows={3}
+                className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all resize-none placeholder:text-tiko-outline-variant"
+                placeholder="Enter your full street address, city, and zip code..."
+              />
+              {errors.address && <p className="text-xs text-tiko-error">{errors.address.message}</p>}
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="w-full py-4 bg-tiko-primary text-white rounded-full font-outfit font-bold text-lg hover:bg-tiko-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-tiko-primary/20 flex items-center justify-center gap-2 mt-2"
+            >
+              Create Account
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+
+          </form>
+
+          <p className="text-center text-sm lg:text-base text-tiko-on-surface-variant">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-tiko-primary hover:underline">Log in</Link>
+          </p>
+
+          <div className="flex justify-center gap-8 text-[10px] font-outfit font-bold text-tiko-on-surface-variant border-t border-tiko-outline-variant pt-6 uppercase tracking-widest">
+            <Link to="#" className="hover:text-tiko-on-surface transition-colors">Privacy Policy</Link>
+            <Link to="#" className="hover:text-tiko-on-surface transition-colors">Terms of Service</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

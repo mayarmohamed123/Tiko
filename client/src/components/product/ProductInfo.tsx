@@ -1,0 +1,144 @@
+import React, { useState } from 'react';
+import { useCart } from '../../context/useCart';
+import ProductAccordions from './ProductAccordions';
+
+export interface ProductType {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  inStock: boolean;
+  breadcrumbs: string[];
+  colors: { name: string; hex: string }[];
+  sizes: string[];
+  images: string[];
+  details: string;
+  composition: string[];
+  shipping: string;
+  returns: string;
+}
+
+interface ProductInfoProps {
+  product: ProductType;
+}
+
+const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
+  const [selectedColor, setSelectedColor] = useState(product.colors[0].name);
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [isAdding, setIsAdding] = useState(false);
+  const { addItem, openCart } = useCart();
+
+  const handleAddToBag = () => {
+    setIsAdding(true);
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      detail: `Size: ${selectedSize} / Color: ${selectedColor}`,
+    });
+    
+    setTimeout(() => {
+      setIsAdding(false);
+      openCart();
+    }, 800);
+  };
+
+  return (
+    <div className="flex flex-col gap-8 h-full sticky top-24">
+      {/* Title & Price */}
+      <div className="space-y-2">
+        <h1 className="font-outfit font-bold text-4xl lg:text-5xl text-tiko-on-surface leading-[1.1]">
+          {product.name}
+        </h1>
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-xl font-bold text-tiko-primary">
+            {product.price.toFixed(2)} {product.currency}
+          </p>
+          <div className="flex items-center gap-1.5 bg-tiko-tertiary-container/20 px-3 py-1 rounded-full border border-tiko-tertiary-container/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-tiko-tertiary animate-pulse" />
+            <span className="text-[10px] font-bold text-tiko-tertiary uppercase tracking-wider">In Stock</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Select Color */}
+      <div className="space-y-4">
+        <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest">Select Color</p>
+        <div className="flex flex-wrap gap-3">
+          {product.colors.map((color) => (
+            <button
+              key={color.name}
+              onClick={() => setSelectedColor(color.name)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 transition-all duration-300 font-outfit text-xs font-bold
+                ${selectedColor === color.name 
+                  ? 'border-tiko-primary bg-tiko-primary text-white shadow-lg shadow-tiko-primary/25' 
+                  : 'border-tiko-outline-variant text-tiko-on-surface-variant hover:border-tiko-primary hover:text-tiko-primary'}`}
+            >
+              {color.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Select Size */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest">Select Size</p>
+          <button className="text-[10px] font-bold text-tiko-primary underline underline-offset-2 hover:opacity-80">Size Guide</button>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {product.sizes.map((size: string) => (
+            <button
+              key={size}
+              onClick={() => setSelectedSize(size)}
+              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 font-outfit text-sm font-bold
+                ${selectedSize === size 
+                  ? 'border-tiko-primary bg-tiko-primary text-white shadow-lg shadow-tiko-primary/25' 
+                  : 'border-tiko-outline-variant text-tiko-on-surface-variant hover:border-tiko-primary hover:text-tiko-primary'}`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Add to Bag Button */}
+      <button
+        onClick={handleAddToBag}
+        disabled={isAdding}
+        className={`group relative w-full py-5 rounded-full font-outfit font-bold text-sm tracking-widest overflow-hidden transition-all duration-500 active:scale-[0.98]
+          ${isAdding ? 'bg-tiko-tertiary text-white' : 'bg-tiko-primary text-white shadow-xl shadow-tiko-primary/30 hover:shadow-tiko-primary/40'}`}
+      >
+        <span className={`flex items-center justify-center gap-2 transition-all duration-300 ${isAdding ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+          ADD TO TIKO BAG
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-300 group-hover:translate-x-1">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </span>
+        
+        {isAdding && (
+          <span className="absolute inset-0 flex items-center justify-center animate-in fade-in zoom-in duration-300">
+            <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            ADDING...
+          </span>
+        )}
+      </button>
+
+      {/* Accordions */}
+      <div className="pt-4 border-t border-tiko-outline-variant">
+        <ProductAccordions 
+          details={product.details} 
+          composition={product.composition} 
+          shipping={product.shipping} 
+          returns={product.returns} 
+        />
+      </div>
+    </div>
+  );
+};
+
+export default ProductInfo;
