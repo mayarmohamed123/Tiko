@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../../context/useCart';
 import ProductAccordions from './ProductAccordions';
 
+
 export interface ProductType {
   id: string;
   name: string;

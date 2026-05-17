@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import MainLayout from '../components/MainLayout';
 import ShopSearchBar from '../components/shop/ShopSearchBar';
 import ShopFilters, { type ShopFiltersState } from '../components/shop/ShopFilters';
 import ShopProductGrid from '../components/shop/ShopProductGrid';
@@ -224,7 +223,7 @@ const ShopPage: React.FC = () => {
   };
 
   return (
-    <MainLayout>
+    <>
       {/* ── Search Bar ── */}
       <ShopSearchBar value={search} onChange={handleSearchChange} />
 
@@ -265,7 +264,7 @@ const ShopPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 

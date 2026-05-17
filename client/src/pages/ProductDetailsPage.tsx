@@ -1,13 +1,12 @@
 import React from 'react';
-import MainLayout from '../components/MainLayout';
 import ProductGallery from '../components/product/ProductGallery';
-import ProductInfo from '../components/product/ProductInfo';
-import ProductRecommendations from '../components/product/ProductRecommendations';
 
 // ─── Mock Product Data ────────────────────────────────────────────────────────
 import shirtMain from '../assets/AB6AXU1.webp';
 import shirtThumb1 from '../assets/AB6AXU2.webp';
 import shirtThumb2 from '../assets/AB6AXU~1.webp';
+import ProductInfo from '../components/product/ProductInfo';
+import ProductRecommendations from '../components/product/ProductRecommendations';
 
 const PRODUCT_DATA = {
   id: 'heritage-linen-shirt',
@@ -36,7 +35,7 @@ const PRODUCT_DATA = {
 
 const ProductDetailsPage: React.FC = () => {
   return (
-    <MainLayout>
+    <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
@@ -69,7 +68,7 @@ const ProductDetailsPage: React.FC = () => {
           <ProductRecommendations />
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 

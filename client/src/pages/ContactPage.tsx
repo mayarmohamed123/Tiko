@@ -2,7 +2,6 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import MainLayout from '../components/MainLayout';
 import interiorDesign from '../assets/Interior Design.webp';
 
 const contactSchema = z.object({
@@ -30,7 +29,7 @@ const ContactPage: React.FC = () => {
   };
 
   return (
-    <MainLayout>
+    <>
       <section className="py-16 lg:py-24 bg-tiko-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -121,7 +120,7 @@ const ContactPage: React.FC = () => {
           </div>
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 };
 
