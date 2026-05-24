@@ -1,17 +1,8 @@
 import React from 'react';
 import { Edit2, Trash2, AlertCircle } from 'lucide-react';
+import type { AdminProduct } from '../../types/admin';
 
-export interface Product {
-  id: string;
-  name: string;
-  material: string;
-  category: string;
-  price: number;
-  stock: number;
-  image: string;
-  availability: 'available' | 'sold-out' | 'limited';
-  description: string;
-}
+export type Product = AdminProduct;
 
 interface ProductsTableProps {
   products: Product[];

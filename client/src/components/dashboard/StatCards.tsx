@@ -1,59 +1,82 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { StatCard } from './StatCard';
-import { 
-  ClipboardList, 
-  Package, 
-  CircleDollarSign, 
-  Users, 
-  AlertTriangle, 
-  TrendingUp 
+import {
+  ClipboardList,
+  Package,
+  CircleDollarSign,
+  Users,
+  AlertTriangle,
 } from 'lucide-react';
+import { customerService, orderService, productService } from '../../services';
 
 export const StatCards: React.FC = () => {
+  const { data: products = [] } = useQuery({
+    queryKey: ['admin', 'products'],
+    queryFn: () => productService.list(),
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ['admin', 'orders', 'stats'],
+    queryFn: orderService.stats,
+  });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['admin', 'customers'],
+    queryFn: () => customerService.list(),
+  });
+
+  const lowStock = products.filter(
+    (p) => p.availability === 'limited' || p.stockQty < p.lowStockThreshold
+  ).length;
+
+  const revenueEstimate = stats
+    ? `$${(stats.averageOrderValue * (stats.deliveredThisMonth + stats.pendingFulfillment)).toFixed(0)}`
+    : '—';
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-      <StatCard 
+      <StatCard
         title="Total Products"
-        value="1,284"
+        value={products.length}
         icon={<ClipboardList className="w-5 h-5" />}
-        subtitle={<><TrendingUp className="w-3 h-3 mr-1" /> 12% increase</>}
+        subtitle="Live from API"
         subtitleColor="text-tiko-tertiary"
         className="h-40"
       />
-      <StatCard 
-        title="Orders"
-        value="452"
+      <StatCard
+        title="Pending Orders"
+        value={stats?.pendingFulfillment ?? '—'}
         icon={<Package className="w-5 h-5" />}
-        subtitle={<><TrendingUp className="w-3 h-3 mr-1" /> 8% increase</>}
+        subtitle="PENDING + PROCESSING"
         subtitleColor="text-tiko-tertiary"
         className="h-40"
       />
-      <StatCard 
-        title="Revenue"
-        value="$24,500"
+      <StatCard
+        title="Avg Order Value"
+        value={stats ? `$${stats.averageOrderValue.toFixed(2)}` : '—'}
         icon={<CircleDollarSign className="w-5 h-5" />}
-        subtitle={<><TrendingUp className="w-3 h-3 mr-1" /> 24% increase</>}
+        subtitle={`Est. volume ${revenueEstimate}`}
         subtitleColor="text-tiko-tertiary"
         className="h-40"
       />
-      <StatCard 
+      <StatCard
         title="Customers"
-        value="892"
+        value={customers.length}
         icon={<Users className="w-5 h-5" />}
-        subtitle={<><TrendingUp className="w-3 h-3 mr-1" /> 5% increase</>}
+        subtitle="Registered profiles"
         subtitleColor="text-tiko-tertiary"
         className="h-40"
       />
-      <StatCard 
+      <StatCard
         title="Low Stock"
-        value="14 Items"
+        value={`${lowStock} Items`}
         icon={<AlertTriangle className="w-5 h-5" />}
-        subtitle="Attention required"
+        subtitle="stock &lt; 5 threshold"
         subtitleColor="text-tiko-error"
         bgColor="bg-tiko-surface"
         borderColor="border-tiko-error-container"
         className="h-40"
-        indicator={<div className="w-full h-full bg-tiko-error"></div>}
       />
     </div>
   );

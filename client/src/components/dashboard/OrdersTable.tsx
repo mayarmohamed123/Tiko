@@ -1,14 +1,7 @@
 import React from 'react';
+import type { AdminOrder } from '../../types/admin';
 
-export interface Order {
-  id: string;
-  customer: string;
-  initials: string;
-  date: string;
-  status: string;
-  payment?: string;
-  total: number;
-}
+export type Order = AdminOrder;
 
 interface OrdersTableProps {
   title?: string;

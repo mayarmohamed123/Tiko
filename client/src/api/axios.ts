@@ -5,13 +5,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor for bearer token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Auth uses httpOnly cookies (withCredentials: true). No bearer token needed.
 
 export default api;

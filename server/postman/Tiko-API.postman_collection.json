@@ -1,0 +1,345 @@
+{
+  "info": {
+    "_postman_id": "c2a4f7ce-4fd3-4f9f-bec3-3f58fa728f81",
+    "name": "Tiko API",
+    "description": "Collection for current Tiko backend APIs (auth, products, categories, customers, orders, delivery zones).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "verifyToken", "value": "" },
+    { "key": "resetToken", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "productSlug", "value": "clay-studio-teapot" },
+    { "key": "categoryId", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "imageId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Demo User\",\n  \"email\": \"demo.user@example.com\",\n  \"password\": \"Admin@1234\",\n  \"confirmPassword\": \"Admin@1234\",\n  \"phone\": \"+962791234567\",\n  \"address\": \"Rainbow St, Amman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "GET /api/auth/verify-email",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/verify-email?token={{verifyToken}}"
+          }
+        },
+        {
+          "name": "POST /api/auth/login (sets cookie)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@tiko.com\",\n  \"password\": \"Admin@1234\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        },
+        {
+          "name": "POST /api/auth/forgot-password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@tiko.com\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "POST /api/auth/reset-password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"Admin@1234\",\n  \"confirmPassword\": \"Admin@1234\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/reset-password"
+          }
+        },
+        {
+          "name": "POST /api/auth/logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET /api/categories",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "POST /api/categories (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Stationery\",\n  \"sortOrder\": 10\n}"
+            },
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "DELETE /api/categories/:id (admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET /api/products",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products"
+          }
+        },
+        {
+          "name": "GET /api/products/slug/:slug",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/slug/{{productSlug}}"
+          }
+        },
+        {
+          "name": "GET /api/products/admin/:id (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/admin/{{productId}}"
+          }
+        },
+        {
+          "name": "POST /api/products (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Notebook Set\",\n  \"material\": \"Recycled Paper\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"description\": \"Minimal recycled notebook pack.\",\n  \"price\": 18.5,\n  \"stockQty\": 20,\n  \"lowStockThreshold\": 5,\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "{{baseUrl}}/api/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  var json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('productId', json.id);",
+                  "  if (json && json.slug) pm.collectionVariables.set('productSlug', json.slug);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/products/:id (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stockQty\": 4,\n  \"lowStockThreshold\": 5,\n  \"price\": 19.99\n}"
+            },
+            "url": "{{baseUrl}}/api/products/{{productId}}"
+          }
+        },
+        {
+          "name": "POST /api/products/:id/images (admin, multipart)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "images", "type": "file", "src": [] },
+                { "key": "images", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{baseUrl}}/api/products/{{productId}}/images"
+          }
+        },
+        {
+          "name": "DELETE /api/products/:id/images/:imageId (admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/products/{{productId}}/images/{{imageId}}"
+          }
+        },
+        {
+          "name": "DELETE /api/products/:id (admin, soft delete)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/products/{{productId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery Zones",
+      "item": [
+        {
+          "name": "GET /api/delivery-zones",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/delivery-zones"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "POST /api/orders (guest checkout)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productId\": \"{{productId}}\", \"quantity\": 1 }\n  ],\n  \"shippingFullName\": \"Guest Buyer\",\n  \"shippingPhone\": \"+962791234567\",\n  \"shippingStreet\": \"Rainbow St, Amman\",\n  \"deliveryZoneCode\": \"amman-west\",\n  \"paymentMethod\": \"CASH\",\n  \"guestEmail\": \"guest@example.com\",\n  \"notes\": \"Call before delivery\"\n}"
+            },
+            "url": "{{baseUrl}}/api/orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  var json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('orderId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/orders (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/orders?page=1&limit=20"
+          }
+        },
+        {
+          "name": "GET /api/orders/stats (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/orders/stats"
+          }
+        },
+        {
+          "name": "GET /api/orders/:id (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "PATCH /api/orders/:id/status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PROCESSING\",\n  \"note\": \"Preparing order\"\n}"
+            },
+            "url": "{{baseUrl}}/api/orders/{{orderId}}/status"
+          }
+        },
+        {
+          "name": "PATCH /api/orders/:id/payment (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAID\",\n  \"instapayReference\": \"INSTA-123456\"\n}"
+            },
+            "url": "{{baseUrl}}/api/orders/{{orderId}}/payment"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers (admin)",
+      "item": [
+        {
+          "name": "GET /api/customers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/customers"
+          }
+        },
+        {
+          "name": "GET /api/customers/:id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/customers/{{customerId}}"
+          }
+        },
+        {
+          "name": "DELETE /api/customers/:id (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/customers/{{customerId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

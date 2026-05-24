@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartProvider';
-// import ProtectedRoute from './routes/ProtectedRoute';
+import AdminRoute from './routes/AdminRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
@@ -41,8 +41,8 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
-              {/* Protected Admin Routes */}
-              {/* <Route element={<ProtectedRoute />}> */}
+              {/* Admin routes (cookie auth + ADMIN role) */}
+              <Route element={<AdminRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/dashboard/orders" element={<OrdersPage />} />
@@ -50,7 +50,7 @@ function App() {
                   <Route path="/dashboard/settings" element={<SettingsPage />} />
                   <Route path="/dashboard/customers" element={<CustomersPage />} />
                 </Route>
-              {/* </Route> */}
+              </Route>
 
               {/* Catch all */}
               <Route path="*" element={<HomePage />} />

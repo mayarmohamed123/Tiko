@@ -55,7 +55,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab }) => {
             <UserIcon className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-sm font-bold text-tiko-on-surface">{user?.name || 'Admin User'}</p>
+            <p className="text-sm font-bold text-tiko-on-surface">{user?.fullName || 'Admin User'}</p>
             <p className="text-xs text-tiko-on-surface-variant">Store Owner</p>
           </div>
         </div>

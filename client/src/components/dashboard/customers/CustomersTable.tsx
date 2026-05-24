@@ -1,18 +1,8 @@
 import React from 'react';
 import { Eye, AlertCircle } from 'lucide-react';
+import type { AdminCustomer } from '../../../types/admin';
 
-export interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  ordersCount: number;
-  totalSpent: number;
-  status: 'active' | 'inactive';
-  joinDate: string;
-  address: string;
-  avatarColor: string;
-}
+export type Customer = AdminCustomer;
 
 interface CustomersTableProps {
   customers: Customer[];

@@ -3,14 +3,259 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  VISA
+  INSTAPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  fullName            String
+  email               String    @unique
+  password            String
+  phone               String?
+  address             String?
+  role                Role      @default(CUSTOMER)
+  isActive            Boolean   @default(true)
+  isVerified          Boolean   @default(false)
+  verificationToken   String?   @unique
+  verificationExpiry  DateTime?
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  customer            Customer?
+  orders              Order[]
+  orderStatusChanges  OrderStatusHistory[]
+}
+
+// ─── Commerce profiles ───────────────────────────────────────────────────────
+
+model Customer {
+  id             String         @id @default(uuid())
+  userId         String?        @unique
+  fullName       String
+  email          String
+  phone          String?
+  defaultAddress String?
+  status         CustomerStatus @default(ACTIVE)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  orders Order[]
+
+  @@index([email])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  sortOrder Int       @default(0)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id                String        @id @default(uuid())
+  sku               String?       @unique
+  name              String
+  slug              String        @unique
+  material          String
+  description       String        @db.Text
+  price             Int // minor units (e.g. fils)
+  stockQty          Int           @default(0)
+  lowStockThreshold Int           @default(5)
+  categoryId        String
+  status            ProductStatus @default(ACTIVE)
+  deletedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  category   Category       @relation(fields: [categoryId], references: [id])
+  images     ProductImage[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model ProductImage {
+  id           String   @id @default(uuid())
+  productId    String
+  url          String
+  publicId     String // Cloudinary public_id for deletion
+  altText      String?
+  sortOrder    Int      @default(0)
+  isPrimary    Boolean  @default(false)
+  mimeType     String?
+  sizeBytes    Int?
+  deletedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([deletedAt])
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model DeliveryZone {
+  id        String    @id @default(uuid())
+  code      String    @unique
+  name      String
+  fee       Int       @default(350) // 3.50 JOD in minor units
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id                 String      @id @default(uuid())
+  orderNumber        String      @unique
+  customerId         String?
+  userId             String?
+  status             OrderStatus @default(PENDING)
+  shippingFullName   String
+  shippingPhone      String
+  shippingStreet     String
+  deliveryZoneId     String?
+  currency           String      @default("JOD")
+  subtotal           Int
+  deliveryFee        Int
+  taxAmount          Int         @default(0)
+  totalAmount        Int
+  notes              String?
+  placedAt           DateTime    @default(now())
+  deletedAt          DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  customer       Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  user           User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  deliveryZone   DeliveryZone?        @relation(fields: [deliveryZoneId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  payment        Payment?
+  statusHistory  OrderStatusHistory[]
+
+  @@index([orderNumber])
+  @@index([status])
+  @@index([customerId])
+  @@index([placedAt])
+  @@index([deletedAt])
+}
+
+model OrderItem {
+  id              String  @id @default(uuid())
+  orderId         String
+  productId       String?
+  productName     String
+  productMaterial String?
+  unitPrice       Int
+  quantity        Int
+  lineTotal       Int
+  imageUrl        String?
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+model Payment {
+  id                   String        @id @default(uuid())
+  orderId              String        @unique
+  method               PaymentMethod
+  status               PaymentStatus @default(PENDING)
+  amount               Int
+  paidAt               DateTime?
+  instapayReference    String?
+  gatewayTransactionId String?
+  gatewayPayload       Json?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderStatusHistory {
+  id              String       @id @default(uuid())
+  orderId         String
+  fromStatus      OrderStatus?
+  toStatus        OrderStatus
+  changedByUserId String?
+  note            String?
+  createdAt       DateTime     @default(now())
+
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy User? @relation(fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+model StoreSettings {
+  id                  String   @id @default("default")
+  currency            String   @default("JOD")
+  defaultDeliveryFee  Int      @default(350)
+  taxRate             Float    @default(0)
+  lowStockThreshold   Int      @default(5)
+  notificationsEnabled Boolean @default(true)
+  defaultLocale       String   @default("en")
+  updatedAt           DateTime @updatedAt
 }
