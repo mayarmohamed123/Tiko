@@ -70,7 +70,7 @@ const OrderSummary: React.FC = () => {
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3">
             <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-tiko-surface-container">
-              <img src={item.image || null} alt={item.name} className="w-full h-full object-cover" />
+              <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-outfit font-bold text-tiko-on-surface leading-snug">{item.name}</p>

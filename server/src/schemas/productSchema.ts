@@ -10,6 +10,8 @@ export const createProductSchema = z.object({
   lowStockThreshold: z.number().int().min(1).default(5),
   status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']).optional(),
   sku: z.string().optional(),
+  colors: z.array(z.string()).optional(),
+  sizes: z.array(z.string()).optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial();

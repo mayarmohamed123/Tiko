@@ -41,7 +41,7 @@ const BestSellersSection: React.FC = () => {
                   className="flex items-center gap-4 bg-white rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200 group cursor-pointer"
                 >
                   <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-tiko-surface-container">
-                    <img src={item.image || null} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-outfit font-bold text-sm text-tiko-on-surface truncate">{item.name}</p>

@@ -117,6 +117,8 @@ export const ProductsPage: React.FC = () => {
       price: number;
       stock: number;
       description: string;
+      colors: string[];
+      sizes: string[];
     },
     files: File[]
   ) => {
@@ -128,6 +130,8 @@ export const ProductsPage: React.FC = () => {
       price: formData.price,
       stockQty: formData.stock,
       lowStockThreshold: 5,
+      colors: formData.colors,
+      sizes: formData.sizes,
     };
 
     if (editingProduct) {

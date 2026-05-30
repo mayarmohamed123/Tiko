@@ -13,6 +13,8 @@ export interface AdminProduct {
   image: string | null;
   availability: ProductAvailability;
   description: string;
+  colors?: string[];
+  sizes?: string[];
   images?: ProductImage[];
 }
 

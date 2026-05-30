@@ -30,6 +30,8 @@ export const mapApiProductToAdmin = (p: ApiProduct): AdminProduct => ({
   image: p.image ?? p.images[0]?.url ?? null,
   availability: p.availability,
   description: p.description,
+  colors: p.colors ?? [],
+  sizes: p.sizes ?? [],
   images: p.images,
 });
 

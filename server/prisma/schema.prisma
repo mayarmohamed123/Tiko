@@ -119,6 +119,8 @@ model Product {
   lowStockThreshold Int           @default(5)
   categoryId        String
   status            ProductStatus @default(ACTIVE)
+  colors            String[]      @default([])
+  sizes             String[]      @default([])
   deletedAt         DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

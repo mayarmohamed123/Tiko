@@ -23,6 +23,8 @@ export interface ApiProduct {
   category: string;
   categoryId: string;
   status: ProductStatus;
+  colors: string[];
+  sizes: string[];
   availability: ProductAvailability;
   image: string | null;
   images: ProductImage[];
@@ -40,6 +42,8 @@ export interface CreateProductRequest {
   lowStockThreshold?: number;
   status?: ProductStatus;
   sku?: string;
+  colors?: string[];
+  sizes?: string[];
 }
 
 export interface UpdateProductRequest {
@@ -52,6 +56,8 @@ export interface UpdateProductRequest {
   lowStockThreshold?: number;
   status?: ProductStatus;
   sku?: string;
+  colors?: string[];
+  sizes?: string[];
 }
 
 export interface ProductImageRecord {

@@ -13,7 +13,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images }) => {
       {/* Main Large Image */}
       <div className="aspect-4/5 rounded-[2.5rem] overflow-hidden bg-tiko-surface-container-low shadow-sm">
         <img
-          src={activeImage || null}
+          src={activeImage || undefined}
           alt="Product Detail"
           className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
         />
@@ -28,7 +28,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images }) => {
             className={`w-1/3 aspect-square rounded-2xl overflow-hidden border-2 transition-all
               ${activeImage === img ? 'border-tiko-primary ring-2 ring-tiko-primary/20 shadow-lg' : 'border-transparent hover:border-tiko-outline-variant'}`}
           >
-            <img src={img || null} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
+            <img src={img || undefined} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
           </button>
         ))}
       </div>

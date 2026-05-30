@@ -79,7 +79,7 @@ const CartDrawer: React.FC = () => {
               <div key={item.id} className="flex gap-4">
                 {/* Thumbnail */}
                 <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-tiko-surface-container">
-                  <img src={item.image || null} alt={item.name} className="w-full h-full object-cover" />
+                  <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover" />
                 </div>
 
                 {/* Details */}

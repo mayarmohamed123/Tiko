@@ -25,7 +25,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Image */}
       <div className="relative overflow-hidden aspect-square bg-tiko-surface-container-low">
         <img
-          src={product.image || null}
+          src={product.image || undefined}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

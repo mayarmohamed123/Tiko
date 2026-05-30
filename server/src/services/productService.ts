@@ -21,6 +21,8 @@ const formatProduct = (product: {
   lowStockThreshold: number;
   categoryId: string;
   status: string;
+  colors: string[];
+  sizes: string[];
   createdAt: Date;
   updatedAt: Date;
   category: { id: string; name: string; slug: string };
@@ -49,6 +51,8 @@ const formatProduct = (product: {
     category: product.category.name,
     categoryId: product.categoryId,
     status: product.status,
+    colors: product.colors,
+    sizes: product.sizes,
     availability: getAvailability(product.stockQty, product.lowStockThreshold),
     image: primary?.url ?? null,
     images: activeImages.map((img) => ({
@@ -133,6 +137,8 @@ export const createProduct = async (data: CreateProductInput) => {
       categoryId: data.categoryId,
       status: data.status ?? 'ACTIVE',
       sku: data.sku,
+      colors: data.colors ?? [],
+      sizes: data.sizes ?? [],
     },
     include: productInclude,
   });
@@ -154,6 +160,8 @@ export const updateProduct = async (id: string, data: UpdateProductInput) => {
   if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
   if (data.status !== undefined) updateData.status = data.status;
   if (data.sku !== undefined) updateData.sku = data.sku;
+  if (data.colors !== undefined) updateData.colors = data.colors;
+  if (data.sizes !== undefined) updateData.sizes = data.sizes;
 
   const product = await prisma.product.update({
     where: { id },
