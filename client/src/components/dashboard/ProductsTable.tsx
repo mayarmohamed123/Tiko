@@ -46,7 +46,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-tiko-outline-variant bg-tiko-surface-container">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        <img src={product.image || null} alt={product.name} className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-tiko-on-surface">{product.name}</h4>

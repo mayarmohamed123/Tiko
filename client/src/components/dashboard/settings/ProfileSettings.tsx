@@ -29,13 +29,13 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 }) => {
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
-  const [photo, setPhoto] = useState(initialPhoto);
+  const [photo, setPhoto] = useState<string | null>(initialPhoto || null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
-    onSave({ name, email, photo });
+    onSave({ name, email, photo: photo ?? '' });
   };
 
   return (

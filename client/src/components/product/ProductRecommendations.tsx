@@ -34,7 +34,7 @@ const ProductRecommendations: React.FC = () => {
           >
             <div className="aspect-square rounded-4xl overflow-hidden bg-tiko-surface-container-low shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:shadow-tiko-primary/5">
               <img 
-                src={prod.image} 
+                src={prod.image || null} 
                 alt={prod.name} 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
               />

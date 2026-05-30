@@ -26,7 +26,8 @@ export const mapApiProductToAdmin = (p: ApiProduct): AdminProduct => ({
   categoryId: p.categoryId,
   price: p.price,
   stock: p.stockQty,
-  image: p.image ?? p.images[0]?.url ?? '',
+  // Use null (not '') so <img src={null}> is a no-op instead of re-fetching the page
+  image: p.image ?? p.images[0]?.url ?? null,
   availability: p.availability,
   description: p.description,
   images: p.images,
