@@ -114,3 +114,21 @@ export const deleteImage = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to delete image.' });
   }
 };
+
+export const getNewArrivals = async (_req: Request, res: Response) => {
+  try {
+    const products = await productService.getNewArrivals();
+    res.json(products);
+  } catch {
+    res.status(500).json({ message: 'Failed to fetch new arrivals.' });
+  }
+};
+
+export const getBestSellers = async (_req: Request, res: Response) => {
+  try {
+    const products = await productService.getBestSellers();
+    res.json(products);
+  } catch {
+    res.status(500).json({ message: 'Failed to fetch best sellers.' });
+  }
+};

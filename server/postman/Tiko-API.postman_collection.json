@@ -145,6 +145,22 @@
           }
         },
         {
+          "name": "GET /api/products/new-arrivals",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/new-arrivals",
+            "description": "Returns the 4 most recently added active products for the landing page New Arrivals section."
+          }
+        },
+        {
+          "name": "GET /api/products/best-sellers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/best-sellers",
+            "description": "Returns the top 2 products ranked by total ordered quantity (excluding CANCELLED orders). Falls back to newest active products when order history is sparse."
+          }
+        },
+        {
           "name": "GET /api/products/slug/:slug",
           "request": {
             "method": "GET",

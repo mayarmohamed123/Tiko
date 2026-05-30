@@ -13,6 +13,12 @@ export const productService = {
       .get<ApiProduct[]>('/products', { params })
       .then((r) => r.data),
 
+  newArrivals: () =>
+    api.get<ApiProduct[]>('/products/new-arrivals').then((r) => r.data),
+
+  bestSellers: () =>
+    api.get<ApiProduct[]>('/products/best-sellers').then((r) => r.data),
+
   getBySlug: (slug: string) =>
     api.get<ApiProduct>(`/products/slug/${slug}`).then((r) => r.data),
 

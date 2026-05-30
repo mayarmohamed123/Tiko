@@ -1,70 +1,80 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import ProductCard, { type Product } from './ProductCard';
+import { useQuery } from '@tanstack/react-query';
+import ProductCard from './ProductCard';
+import { productService } from '../services';
+import type { ApiProduct } from '../types';
 
-// Using available images from assets
-import container from '../assets/Container.webp';
-import container1 from '../assets/Container1.webp';
-import container2 from '../assets/Container2.webp';
-import container3 from '../assets/Container3.webp';
+// ─── Shimmer skeleton card ────────────────────────────────────────────────────
+const SkeletonCard: React.FC = () => (
+  <div className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+    <div className="aspect-square bg-tiko-surface-container-high" />
+    <div className="p-4 space-y-2">
+      <div className="h-2.5 w-1/3 bg-tiko-surface-container-high rounded-full" />
+      <div className="h-3.5 w-3/4 bg-tiko-surface-container-high rounded-full" />
+      <div className="h-3.5 w-1/2 bg-tiko-surface-container-high rounded-full" />
+      <div className="mt-3 h-9 w-full bg-tiko-surface-container-high rounded-xl" />
+    </div>
+  </div>
+);
 
-const newArrivals: Product[] = [
-  {
-    id: 'na-1',
-    name: 'Hand-Thrown Terracotta Vase',
-    material: 'Artisanal Ceramic',
-    price: 85,
-    image: container,
-    badge: 'NEW ARRIVAL',
-  },
-  {
-    id: 'na-2',
-    name: 'Raw Linen Cushion Set',
-    material: 'Stone Washed',
-    price: 120,
-    image: container1,
-  },
-  {
-    id: 'na-3',
-    name: 'Solis Marble Table Lamp',
-    material: 'Natural Travertine',
-    price: 245,
-    image: container2,
-    badge: 'LIMITED',
-  },
-  {
-    id: 'na-4',
-    name: 'Hand-Carved Walnut Bowl',
-    material: 'Ethically Sourced',
-    price: 68,
-    image: container3,
-  },
-];
+// ─── Mapper ───────────────────────────────────────────────────────────────────
+const toProductCard = (p: ApiProduct) => ({
+  id: p.id,
+  name: p.name,
+  material: p.material,
+  price: p.price,
+  image: p.image ?? p.images?.[0]?.url ?? '',
+  badge: undefined as 'NEW ARRIVAL' | 'LIMITED' | 'BEST SELLER' | undefined,
+});
 
+// ─── Section ──────────────────────────────────────────────────────────────────
 const NewArrivalsSection: React.FC = () => {
+  const { data: arrivals = [], isLoading } = useQuery({
+    queryKey: ['new-arrivals'],
+    queryFn: productService.newArrivals,
+    staleTime: 1000 * 60 * 5, // 5 min cache
+  });
+
   return (
     <section className="py-16 lg:py-20 bg-tiko-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex items-end justify-between mb-10">
           <div className="space-y-1">
-            <p className="text-xs font-outfit font-bold text-tiko-primary uppercase tracking-widest">The Latest</p>
-            <h2 className="text-3xl sm:text-4xl font-outfit font-bold text-tiko-on-surface">New at Tiko</h2>
+            <p className="text-xs font-outfit font-bold text-tiko-primary uppercase tracking-widest">
+              The Latest
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-outfit font-bold text-tiko-on-surface">
+              New at Tiko
+            </h2>
           </div>
           <Link
-            to="/new-arrivals"
+            to="/shop"
             className="text-xs font-outfit font-bold text-tiko-on-surface uppercase tracking-widest hover:text-tiko-primary transition-colors underline underline-offset-4"
           >
-            Shop New
+            Shop All
           </Link>
         </div>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {newArrivals.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+            : arrivals.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={toProductCard(product)}
+                />
+              ))}
         </div>
+
+        {/* Empty state */}
+        {!isLoading && arrivals.length === 0 && (
+          <p className="text-center text-tiko-on-surface-variant text-sm py-12">
+            No products available yet. Check back soon!
+          </p>
+        )}
       </div>
     </section>
   );

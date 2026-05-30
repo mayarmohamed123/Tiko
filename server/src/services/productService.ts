@@ -270,3 +270,65 @@ export const softDeleteProductImage = async (productId: string, imageId: string)
     }
   }
 };
+
+// ─── Landing page helpers ────────────────────────────────────────────────────
+
+export const getNewArrivals = async () => {
+  const products = await prisma.product.findMany({
+    where: { ...notDeleted, status: 'ACTIVE' },
+    include: productInclude,
+    orderBy: { createdAt: 'desc' },
+    take: 4,
+  });
+  return products.map(formatProduct);
+};
+
+export const getBestSellers = async () => {
+  // Aggregate order quantities per product (exclude CANCELLED orders)
+  const topItems = await prisma.orderItem.groupBy({
+    by: ['productId'],
+    where: {
+      productId: { not: null },
+      order: { status: { not: 'CANCELLED' } },
+    },
+    _sum: { quantity: true },
+    orderBy: { _sum: { quantity: 'desc' } },
+    take: 2,
+  });
+
+  const topIds = topItems
+    .map((r) => r.productId)
+    .filter((id): id is string => id !== null);
+
+  const bestsellers: ReturnType<typeof formatProduct>[] = [];
+
+  if (topIds.length > 0) {
+    const products = await prisma.product.findMany({
+      where: { id: { in: topIds }, ...notDeleted, status: 'ACTIVE' },
+      include: productInclude,
+    });
+    // Preserve the ranking order returned by groupBy
+    for (const id of topIds) {
+      const p = products.find((p) => p.id === id);
+      if (p) bestsellers.push(formatProduct(p));
+    }
+  }
+
+  // Fallback: fill remaining slots from newest active products
+  if (bestsellers.length < 2) {
+    const excludeIds = bestsellers.map((p) => p.id);
+    const fallback = await prisma.product.findMany({
+      where: {
+        ...notDeleted,
+        status: 'ACTIVE',
+        id: excludeIds.length ? { notIn: excludeIds } : undefined,
+      },
+      include: productInclude,
+      orderBy: { createdAt: 'desc' },
+      take: 2 - bestsellers.length,
+    });
+    bestsellers.push(...fallback.map(formatProduct));
+  }
+
+  return bestsellers;
+};
