@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/useCart';
 import ProductAccordions from './ProductAccordions';
-
 
 export interface ProductType {
   id: string;
@@ -10,13 +9,14 @@ export interface ProductType {
   currency: string;
   inStock: boolean;
   breadcrumbs: string[];
-  colors: { name: string; hex: string }[];
+  colors: string[];
   sizes: string[];
   images: string[];
   details: string;
   composition: string[];
   shipping: string;
   returns: string;
+  material: string;
 }
 
 interface ProductInfoProps {
@@ -24,19 +24,30 @@ interface ProductInfoProps {
 }
 
 const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0].name);
-  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || '');
+  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '');
   const [isAdding, setIsAdding] = useState(false);
   const { addItem, openCart } = useCart();
 
+  // Reset local state if active product changes
+  useEffect(() => {
+    setSelectedColor(product.colors?.[0] || '');
+    setSelectedSize(product.sizes?.[0] || '');
+  }, [product]);
+
   const handleAddToBag = () => {
     setIsAdding(true);
+    const detailsArray: string[] = [];
+    if (selectedSize) detailsArray.push(`Size: ${selectedSize}`);
+    if (selectedColor) detailsArray.push(`Color: ${selectedColor}`);
+    const detailString = detailsArray.join(' / ') || product.material;
+
     addItem({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.images[0],
-      detail: `Size: ${selectedSize} / Color: ${selectedColor}`,
+      price: Math.round(product.price * 100), // cart stores price in minor units (cents)
+      image: product.images[0] || '',
+      detail: detailString,
     });
     
     setTimeout(() => {
@@ -53,69 +64,81 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
           {product.name}
         </h1>
         <div className="flex items-center justify-between pt-1">
-          <p className="text-xl font-bold text-tiko-primary">
+          <p className="text-xl font-bold text-tiko-primary font-outfit">
             {product.price.toFixed(2)} {product.currency}
           </p>
           <div className="flex items-center gap-1.5 bg-tiko-tertiary-container/20 px-3 py-1 rounded-full border border-tiko-tertiary-container/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-tiko-tertiary animate-pulse" />
-            <span className="text-[10px] font-bold text-tiko-tertiary uppercase tracking-wider">In Stock</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${product.inStock ? 'bg-tiko-tertiary animate-pulse' : 'bg-tiko-outline'}`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${product.inStock ? 'text-tiko-tertiary' : 'text-tiko-on-surface-variant'}`}>
+              {product.inStock ? 'In Stock' : 'Out of Stock'}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Select Color */}
-      <div className="space-y-4">
-        <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest">Select Color</p>
-        <div className="flex flex-wrap gap-3">
-          {product.colors.map((color) => (
-            <button
-              key={color.name}
-              onClick={() => setSelectedColor(color.name)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 transition-all duration-300 font-outfit text-xs font-bold
-                ${selectedColor === color.name 
-                  ? 'border-tiko-primary bg-tiko-primary text-white shadow-lg shadow-tiko-primary/25' 
-                  : 'border-tiko-outline-variant text-tiko-on-surface-variant hover:border-tiko-primary hover:text-tiko-primary'}`}
-            >
-              {color.name}
-            </button>
-          ))}
+      {product.colors && product.colors.length > 0 && (
+        <div className="space-y-4">
+          <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest">Select Color</p>
+          <div className="flex flex-wrap gap-3">
+            {product.colors.map((color) => (
+              <button
+                key={color}
+                onClick={() => setSelectedColor(color)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 transition-all duration-300 font-outfit text-xs font-bold
+                  ${selectedColor === color 
+                    ? 'border-tiko-primary bg-tiko-primary text-white shadow-lg shadow-tiko-primary/25' 
+                    : 'border-tiko-outline-variant text-tiko-on-surface-variant hover:border-tiko-primary hover:text-tiko-primary'}`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Select Size */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest">Select Size</p>
-          <button className="text-[10px] font-bold text-tiko-primary underline underline-offset-2 hover:opacity-80">Size Guide</button>
+      {product.sizes && product.sizes.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest">Select Size</p>
+            <button className="text-[10px] font-bold text-tiko-primary underline underline-offset-2 hover:opacity-80">Size Guide</button>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {product.sizes.map((size: string) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 font-outfit text-sm font-bold
+                  ${selectedSize === size 
+                    ? 'border-tiko-primary bg-tiko-primary text-white shadow-lg shadow-tiko-primary/25' 
+                    : 'border-tiko-outline-variant text-tiko-on-surface-variant hover:border-tiko-primary hover:text-tiko-primary'}`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          {product.sizes.map((size: string) => (
-            <button
-              key={size}
-              onClick={() => setSelectedSize(size)}
-              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 font-outfit text-sm font-bold
-                ${selectedSize === size 
-                  ? 'border-tiko-primary bg-tiko-primary text-white shadow-lg shadow-tiko-primary/25' 
-                  : 'border-tiko-outline-variant text-tiko-on-surface-variant hover:border-tiko-primary hover:text-tiko-primary'}`}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Add to Bag Button */}
       <button
         onClick={handleAddToBag}
-        disabled={isAdding}
-        className={`group relative w-full py-5 rounded-full font-outfit font-bold text-sm tracking-widest overflow-hidden transition-all duration-500 active:scale-[0.98]
-          ${isAdding ? 'bg-tiko-tertiary text-white' : 'bg-tiko-primary text-white shadow-xl shadow-tiko-primary/30 hover:shadow-tiko-primary/40'}`}
+        disabled={isAdding || !product.inStock}
+        className={`group relative w-full py-5 rounded-full font-outfit font-bold text-sm tracking-widest overflow-hidden transition-all duration-500 active:scale-[0.98] disabled:cursor-not-allowed
+          ${!product.inStock 
+            ? 'bg-tiko-surface-container text-tiko-on-surface-variant' 
+            : isAdding 
+            ? 'bg-tiko-tertiary text-white' 
+            : 'bg-tiko-primary text-white shadow-xl shadow-tiko-primary/30 hover:shadow-tiko-primary/40'}`}
       >
         <span className={`flex items-center justify-center gap-2 transition-all duration-300 ${isAdding ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-          ADD TO TIKO BAG
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-300 group-hover:translate-x-1">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+          {product.inStock ? 'ADD TO TIKO BAG' : 'OUT OF STOCK'}
+          {product.inStock && (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-300 group-hover:translate-x-1">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          )}
         </span>
         
         {isAdding && (

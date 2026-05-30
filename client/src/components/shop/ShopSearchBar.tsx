@@ -3,9 +3,10 @@ import React from 'react';
 interface ShopSearchBarProps {
   value: string;
   onChange: (val: string) => void;
+  categories: string[];
 }
 
-const ShopSearchBar: React.FC<ShopSearchBarProps> = ({ value, onChange }) => {
+const ShopSearchBar: React.FC<ShopSearchBarProps> = ({ value, onChange, categories }) => {
   return (
     <div className="w-full bg-tiko-surface border-b border-tiko-outline-variant py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -51,7 +52,7 @@ const ShopSearchBar: React.FC<ShopSearchBarProps> = ({ value, onChange }) => {
 
         {/* Quick filter pills */}
         <div className="flex flex-wrap gap-2 justify-center mt-4">
-          {['All', 'Home Decor', 'Kitchen & Dining', 'Textiles', 'Wellness', 'Lighting'].map((tag) => (
+          {['All', ...categories].map((tag) => (
             <button
               key={tag}
               onClick={() => onChange(tag === 'All' ? '' : tag)}

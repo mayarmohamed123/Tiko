@@ -10,6 +10,7 @@ router.get('/', productController.listProducts);
 router.get('/new-arrivals', productController.getNewArrivals);
 router.get('/best-sellers', productController.getBestSellers);
 router.get('/slug/:slug', productController.getProduct);
+router.get('/:id', productController.getProductById);
 
 // Admin
 router.get('/admin/:id', adminMiddleware, productController.getProductById);

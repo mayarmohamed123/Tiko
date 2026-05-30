@@ -168,6 +168,13 @@
           }
         },
         {
+          "name": "GET /api/products/:id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/:id"
+          }
+        },
+        {
           "name": "GET /api/products/admin/:id (admin)",
           "request": {
             "method": "GET",

@@ -23,7 +23,7 @@ export const productService = {
     api.get<ApiProduct>(`/products/slug/${slug}`).then((r) => r.data),
 
   getById: (id: string) =>
-    api.get<ApiProduct>(`/products/admin/${id}`).then((r) => r.data),
+    api.get<ApiProduct>(`/products/${id}`).then((r) => r.data),
 
   create: (data: CreateProductRequest) =>
     api.post<ApiProduct>('/products', data).then((r) => r.data),

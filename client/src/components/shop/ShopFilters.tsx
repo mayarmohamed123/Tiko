@@ -10,12 +10,12 @@ export interface ShopFiltersState {
 interface ShopFiltersProps {
   filters: ShopFiltersState;
   onChange: (filters: ShopFiltersState) => void;
+  categories: string[];
 }
 
-const CATEGORIES = ['Home Decor', 'Kitchen & Dining', 'Textiles', 'Wellness', 'Lighting'];
 const AVAILABILITY = ['Tiko Picks', 'Available Now', 'Ships Locally'];
 
-const ShopFilters: React.FC<ShopFiltersProps> = ({ filters, onChange }) => {
+const ShopFilters: React.FC<ShopFiltersProps> = ({ filters, onChange, categories }) => {
   const toggleCategory = (cat: string) => {
     const next = filters.categories.includes(cat)
       ? filters.categories.filter((c) => c !== cat)
@@ -59,7 +59,7 @@ const ShopFilters: React.FC<ShopFiltersProps> = ({ filters, onChange }) => {
       <div>
         <p className="text-[10px] font-bold text-tiko-outline uppercase tracking-widest mb-3">Categories</p>
         <ul className="space-y-2.5">
-          {CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const active = filters.categories.includes(cat);
             return (
               <li key={cat}>
