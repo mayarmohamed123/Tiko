@@ -1,25 +1,15 @@
-import React, { useState } from 'react';
-import { Camera, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Camera } from 'lucide-react';
 
-// Define some cute premium avatar visuals
+// Default visual placeholder
 import container from '../../../assets/Container.webp';
-import container1 from '../../../assets/Container1.webp';
-import container2 from '../../../assets/Container2.webp';
-import container3 from '../../../assets/Container3.webp';
 
 interface ProfileSettingsProps {
   initialName: string;
   initialEmail: string;
   initialPhoto: string;
-  onSave: (data: { name: string; email: string; photo: string }) => void;
+  onSave: (data: { name: string; email: string }, avatarFile: File | null) => void;
 }
-
-const AVATAR_OPTIONS = [
-  { name: 'Clay Peach', url: container },
-  { name: 'Belgian Linen', url: container1 },
-  { name: 'Sage Green', url: container2 },
-  { name: 'Dark Terra', url: container3 },
-];
 
 export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   initialName,
@@ -30,12 +20,25 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [photo, setPhoto] = useState<string | null>(initialPhoto || null);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setPhoto(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCameraClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
-    onSave({ name, email, photo: photo ?? '' });
+    onSave({ name, email }, avatarFile);
   };
 
   return (
@@ -54,50 +57,28 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             </div>
             <button
               type="button"
-              onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+              onClick={handleCameraClick}
               className="absolute bottom-0 right-0 p-2 bg-tiko-primary hover:bg-tiko-primary-container text-white rounded-full shadow-lg transition-all"
-              title="Choose photo"
+              title="Upload custom photo"
             >
               <Camera className="w-4 h-4" />
             </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
 
           <div className="space-y-1">
             <h4 className="text-sm font-bold text-tiko-on-surface">Avatar Graphic</h4>
             <p className="text-xs text-tiko-on-surface-variant max-w-sm">
-              Choose one of our premium minimalist ceramics/fabrics as your store manager avatar.
+              Upload a custom image to personalize your store manager account photo.
             </p>
           </div>
         </div>
-
-        {/* Dynamic Avatar Picker grid */}
-        {showAvatarPicker && (
-          <div className="bg-tiko-surface-container-low border border-tiko-outline-variant p-4 rounded-xl space-y-3 animate-slide-down">
-            <p className="text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Select Avatar Graphic:</p>
-            <div className="flex gap-4">
-              {AVATAR_OPTIONS.map((opt, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    setPhoto(opt.url);
-                    setShowAvatarPicker(false);
-                  }}
-                  className={`w-14 h-14 rounded-full overflow-hidden border-2 relative transition-all ${
-                    photo === opt.url ? 'border-tiko-primary scale-105 shadow-md' : 'border-transparent hover:scale-105'
-                  }`}
-                >
-                  <img src={opt.url} alt={opt.name} className="w-full h-full object-cover" />
-                  {photo === opt.url && (
-                    <div className="absolute inset-0 bg-tiko-primary/10 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-tiko-primary bg-white rounded-full p-0.5" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Username */}

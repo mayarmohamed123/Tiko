@@ -126,10 +126,11 @@
           }
         },
         {
-          "name": "DELETE /api/categories/:id (admin)",
+          "name": "DELETE /api/categories/:id (admin - deletes products)",
           "request": {
             "method": "DELETE",
-            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}",
+            "description": "Deletes the category and cascades soft-delete to all products belonging to it."
           }
         }
       ]

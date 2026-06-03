@@ -8,6 +8,7 @@ interface CustomerDetailsModalProps {
   onClose: () => void;
   customer: Customer | null;
   orderHistory?: CustomerOrderSummary[];
+  onStatusChange?: (id: string, status: 'ACTIVE' | 'INACTIVE') => void;
 }
 
 export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
@@ -15,6 +16,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
   onClose,
   customer,
   orderHistory,
+  onStatusChange,
 }) => {
   if (!isOpen || !customer) return null;
 
@@ -40,9 +42,19 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
             </div>
             <div>
               <h4 className="font-outfit font-bold text-lg">{customer.name}</h4>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${customer.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                {customer.status}
-              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${customer.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'} capitalize`}>
+                  {customer.status}
+                </span>
+                <select
+                  value={customer.status.toUpperCase()}
+                  onChange={(e) => onStatusChange?.(customer.id, e.target.value as 'ACTIVE' | 'INACTIVE')}
+                  className="text-xs bg-white border border-tiko-outline-variant rounded px-2 py-0.5 font-medium text-tiko-on-surface focus:outline-none focus:ring-1 focus:ring-tiko-primary"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
             </div>
           </div>
 

@@ -28,18 +28,29 @@ const OrdersPage: React.FC = () => {
   });
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['admin', 'orders', currentPage, search, statusFilter],
+    queryKey: ['admin', 'orders', search],
     queryFn: () =>
       orderService.list({
-        page: currentPage,
-        limit: 10,
+        page: 1,
+        limit: 1000,
         search: search || undefined,
-        status: STATUS_MAP[statusFilter],
       }),
   });
 
-  const orders = data?.orders.map(mapOrderListItemToAdmin) ?? [];
-  const pagination = data?.pagination;
+  const allOrders = data?.orders.map(mapOrderListItemToAdmin) ?? [];
+
+  // Frontend status filtration
+  const filteredOrders = statusFilter === 'All Statuses'
+    ? allOrders
+    : allOrders.filter((o) => o.statusRaw === STATUS_MAP[statusFilter]);
+
+  const itemsPerPage = 10;
+  const totalOrders = filteredOrders.length;
+
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="space-y-8">
@@ -120,14 +131,14 @@ const OrdersPage: React.FC = () => {
         <p className="text-tiko-error text-sm">{getErrorMessage(error)}</p>
       ) : (
         <OrdersTable
-          orders={orders}
+          orders={paginatedOrders}
           showSearch={false}
           showFilters={false}
           showPagination={true}
-          totalOrders={pagination?.total ?? 0}
+          totalOrders={totalOrders}
           currentPage={currentPage}
           onPageChange={setCurrentPage}
-          itemsPerPage={pagination?.limit ?? 10}
+          itemsPerPage={itemsPerPage}
         />
       )}
     </div>

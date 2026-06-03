@@ -12,4 +12,7 @@ export const customerService = {
 
   remove: (id: string) =>
     api.delete<ApiMessageResponse>(`/customers/${id}`).then((r) => r.data),
+
+  updateStatus: (id: string, status: 'ACTIVE' | 'INACTIVE') =>
+    api.patch<CustomerDetail>(`/customers/${id}/status`, { status }).then((r) => r.data),
 };

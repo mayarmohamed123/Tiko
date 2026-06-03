@@ -35,3 +35,29 @@ export const deleteCustomer = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to delete customer.' });
   }
 };
+
+import { z } from 'zod';
+
+const updateCustomerStatusSchema = z.object({
+  status: z.enum(['ACTIVE', 'INACTIVE']),
+});
+
+export const updateCustomerStatus = async (req: Request, res: Response) => {
+  const parsed = updateCustomerStatusSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Invalid input.', errors: parsed.error.flatten() });
+  }
+
+  try {
+    const customer = await customerService.updateCustomerStatus(
+      paramId(req.params.id),
+      parsed.data.status
+    );
+    res.json(customer);
+  } catch (e: unknown) {
+    if ((e as Error).message === 'CUSTOMER_NOT_FOUND') {
+      return res.status(404).json({ message: 'Customer not found.' });
+    }
+    res.status(500).json({ message: 'Failed to update customer status.' });
+  }
+};

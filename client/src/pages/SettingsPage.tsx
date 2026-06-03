@@ -1,31 +1,71 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { ProfileSettings } from '../components/dashboard/settings/ProfileSettings';
 import { SecuritySettings } from '../components/dashboard/settings/SecuritySettings';
-import { PreferencesSettings } from '../components/dashboard/settings/PreferencesSettings';
-import { FeatureUnavailable } from '../components/common/FeatureUnavailable';
 import { PageLoader } from '../components/common/PageLoader';
 import { authService } from '../services';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 import container from '../assets/Container.webp';
 
 export const SettingsPage: React.FC = () => {
+  const queryClient = useQueryClient();
+
   const { data: me, isLoading } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: authService.me,
   });
 
-  const handleSaveProfile = () => {
-    toast.error('PATCH /api/auth/profile — not implemented on backend yet');
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: { fullName: string; email: string }) =>
+      authService.updateProfile(data),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      toast.success(res.message || 'Profile updated successfully');
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err, 'Failed to update profile'));
+    },
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file: File) => authService.uploadAvatar(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err, 'Failed to upload profile photo'));
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: (data: { currentPass: string; newPass: string }) =>
+      authService.changePassword({
+        currentPassword: data.currentPass,
+        newPassword: data.newPass,
+        confirmPassword: data.newPass,
+      }),
+    onSuccess: () => {
+      toast.success('Password changed successfully');
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err, 'Failed to change password'));
+    },
+  });
+
+  const handleSaveProfile = (
+    data: { name: string; email: string },
+    avatarFile: File | null
+  ) => {
+    updateProfileMutation.mutate({ fullName: data.name, email: data.email });
+    if (avatarFile) {
+      uploadAvatarMutation.mutate(avatarFile);
+    }
   };
 
-  const handleSavePassword = () => {
-    toast.error('POST /api/auth/change-password — not implemented (use forgot-password flow)');
-  };
-
-  const handleSavePreferences = () => {
-    toast.error('PATCH /api/store/settings — not implemented on backend yet');
+  const handleSavePassword = (data: { currentPass: string; newPass: string }) => {
+    changePasswordMutation.mutate(data);
   };
 
   if (isLoading) return <PageLoader />;
@@ -35,7 +75,7 @@ export const SettingsPage: React.FC = () => {
       <header className="mb-4">
         <h2 className="text-headline-lg font-outfit text-tiko-on-surface mb-1">Account & Preferences</h2>
         <p className="text-tiko-on-surface-variant text-sm">
-          Profile loaded from GET /api/auth/me. Other sections pending backend APIs.
+          Manage your profile identity and security settings.
         </p>
       </header>
 
@@ -43,17 +83,11 @@ export const SettingsPage: React.FC = () => {
         <ProfileSettings
           initialName={me?.fullName ?? 'Admin'}
           initialEmail={me?.email ?? ''}
-          initialPhoto={container}
+          initialPhoto={me?.avatarUrl || container}
           onSave={handleSaveProfile}
         />
 
-        <FeatureUnavailable description="Update profile (name, photo) requires PATCH /api/auth/profile." />
-
         <SecuritySettings onSavePassword={handleSavePassword} />
-        <FeatureUnavailable description="Change password while logged in requires POST /api/auth/change-password." />
-
-        <PreferencesSettings onSavePreferences={handleSavePreferences} />
-        <FeatureUnavailable description="Store currency/locale requires GET/PATCH /api/store/settings (StoreSettings model exists, no route yet)." />
       </div>
     </div>
   );

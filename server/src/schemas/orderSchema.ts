@@ -21,12 +21,12 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderStatusSchema = z.object({
-  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']),
+  status: z.enum(['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']),
   note: z.string().optional(),
 });
 
 export const updatePaymentStatusSchema = z.object({
-  status: z.enum(['PENDING', 'AUTHORIZED', 'PAID', 'FAILED', 'REFUNDED']),
+  status: z.enum(['PENDING', 'PAID', 'FAILED']),
   instapayReference: z.string().optional(),
 });
 

@@ -14,6 +14,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         fullName: me.fullName,
         email: me.email,
         role: me.role,
+        avatarUrl: me.avatarUrl,
       });
     } catch {
       setUser(null);

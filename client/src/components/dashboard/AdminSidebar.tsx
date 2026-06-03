@@ -62,11 +62,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab }) => {
       <div className="p-4 border-t border-tiko-surface-container-high m-4">
         <div className="flex flex-col space-y-4">
           <div className="flex items-center space-x-3 px-2">
-            <div className="w-10 h-10 bg-tiko-surface-container-high rounded-full flex items-center justify-center text-tiko-primary">
-              <UserIcon className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-tiko-surface-container-high bg-tiko-surface-container flex items-center justify-center text-tiko-primary shadow-sm shrink-0">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Admin avatar" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon className="w-5 h-5" />
+              )}
             </div>
             <div>
-              <p className="text-sm font-bold text-tiko-on-surface">{user?.fullName || 'Admin User'}</p>
+              <p className="text-sm font-bold text-tiko-on-surface line-clamp-1">{user?.fullName || 'Admin User'}</p>
               <p className="text-xs text-tiko-on-surface-variant">Store Owner</p>
             </div>
           </div>

@@ -1,12 +1,14 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
+import type { Category } from '../../types';
 
 interface ProductFiltersProps {
   search: string;
   onSearchChange: (val: string) => void;
-  categories: string[];
+  categories: Category[];
   selectedCategory: string;
   onCategoryChange: (cat: string) => void;
+  onDeleteCategory: (id: string, name: string) => void;
 }
 
 export const ProductFilters: React.FC<ProductFiltersProps> = ({
@@ -15,6 +17,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
   categories,
   selectedCategory,
   onCategoryChange,
+  onDeleteCategory,
 }) => {
   return (
     <div className="bg-tiko-surface rounded-tiko-xl border border-tiko-surface-container-high p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm">
@@ -44,17 +47,35 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
           All
         </button>
         {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => onCategoryChange(cat)}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-              selectedCategory === cat
+          <div
+            key={cat.id}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+              selectedCategory === cat.name
                 ? 'bg-tiko-primary text-white shadow-sm shadow-tiko-primary/15'
                 : 'bg-tiko-surface-container text-tiko-on-surface hover:bg-tiko-surface-container-high'
             }`}
           >
-            {cat}
-          </button>
+            <button
+              onClick={() => onCategoryChange(cat.name)}
+              className="focus:outline-none"
+            >
+              {cat.name}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteCategory(cat.id, cat.name);
+              }}
+              className={`p-0.5 rounded-full hover:bg-black/10 focus:outline-none transition-colors ${
+                selectedCategory === cat.name
+                  ? 'text-white/80 hover:text-white'
+                  : 'text-tiko-on-surface-variant/60 hover:text-tiko-error'
+              }`}
+              title={`Delete ${cat.name} and all its products`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         ))}
       </div>
     </div>

@@ -7,8 +7,13 @@ import {
   forgotPassword,
   resetPasswordHandler,
   getMe,
+  updateProfile,
+  changePassword,
+  uploadAvatar,
 } from '../controllers/authController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import { avatarUpload } from '../middleware/uploadMiddleware.js';
+
 
 const router = Router();
 
@@ -236,5 +241,8 @@ router.post('/reset-password', resetPasswordHandler);
  *         description: Not authenticated
  */
 router.get('/me', authMiddleware, getMe);
+router.patch('/profile', authMiddleware, updateProfile);
+router.post('/change-password', authMiddleware, changePassword);
+router.patch('/avatar', authMiddleware, avatarUpload.single('avatar'), uploadAvatar);
 
 export default router;

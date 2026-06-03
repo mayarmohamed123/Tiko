@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
 import prisma from '../config/db.js';
 import {
   initiateRegisterSchema,
@@ -6,6 +7,8 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  updateProfileSchema,
+  changePasswordSchema,
 } from '../schemas/authSchema.js';
 import {
   initiateRegistration,
@@ -14,6 +17,8 @@ import {
   generatePasswordResetToken,
   resetPassword,
 } from '../services/authService.js';
+import { uploadUserAvatar } from '../utils/cloudinary.js';
+
 
 // ─── Cookie config ────────────────────────────────────────────────────────────
 const COOKIE_NAME = 'auth_token';
@@ -160,6 +165,7 @@ export const getMe = async (req: Request, res: Response) => {
         address: true,
         role: true,
         isVerified: true,
+        avatarUrl: true,
         createdAt: true,
       },
     });
@@ -173,3 +179,132 @@ export const getMe = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+// ─── PATCH /api/auth/profile ──────────────────────────────────────────────────
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required.' });
+    }
+
+    const data = updateProfileSchema.parse(req.body);
+
+    if (data.email) {
+      const existingUser = await prisma.user.findFirst({
+        where: { email: data.email, NOT: { id: userId } },
+      });
+      if (existingUser) {
+        return res.status(409).json({ message: 'Email is already taken.' });
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        address: true,
+        role: true,
+        avatarUrl: true,
+      },
+    });
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ message: 'Validation failed', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// ─── POST /api/auth/change-password ───────────────────────────────────────────
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required.' });
+    }
+
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    res.status(200).json({ message: 'Password changed successfully.' });
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ message: 'Validation failed', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// ─── PATCH /api/auth/avatar ───────────────────────────────────────────────────
+export const uploadAvatar = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required.' });
+    }
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+
+    const avatarUrl = await uploadUserAvatar(file.buffer, userId);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        address: true,
+        role: true,
+        avatarUrl: true,
+      },
+    });
+
+    res.status(200).json({
+      message: 'Avatar uploaded successfully',
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    console.error('[UploadAvatar Error]', error);
+    res.status(500).json({ message: 'Failed to upload avatar.' });
+  }
+};
+

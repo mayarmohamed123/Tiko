@@ -183,6 +183,9 @@ export const createOrder = async (
         phone: data.shippingPhone,
         address: data.shippingStreet,
       });
+      if (customer.status === 'INACTIVE') {
+        throw new Error('CUSTOMER_INACTIVE');
+      }
       customerId = customer.id;
     }
   } else if (data.guestEmail) {
@@ -192,6 +195,9 @@ export const createOrder = async (
       phone: data.shippingPhone,
       address: data.shippingStreet,
     });
+    if (customer.status === 'INACTIVE') {
+      throw new Error('CUSTOMER_INACTIVE');
+    }
     customerId = customer.id;
   }
 

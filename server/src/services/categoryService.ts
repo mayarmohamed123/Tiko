@@ -20,13 +20,14 @@ export const createCategory = async (name: string, sortOrder = 0) => {
 };
 
 export const softDeleteCategory = async (id: string) => {
-  const count = await prisma.product.count({
-    where: { categoryId: id, ...notDeleted },
-  });
-  if (count > 0) throw new Error('CATEGORY_HAS_PRODUCTS');
-
-  await prisma.category.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
+  await prisma.$transaction([
+    prisma.product.updateMany({
+      where: { categoryId: id, deletedAt: null },
+      data: { deletedAt: new Date() },
+    }),
+    prisma.category.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    }),
+  ]);
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { StatCard } from '../components/dashboard/StatCard';
 import { CustomerFilters } from '../components/dashboard/customers/CustomerFilters';
 import { CustomersTable, type Customer } from '../components/dashboard/customers/CustomersTable';
@@ -10,6 +11,7 @@ import { mapCustomerDetailToAdmin, mapCustomerToAdmin } from '../utils/adminMapp
 import { getErrorMessage } from '../utils/getErrorMessage';
 
 export const CustomersPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
@@ -37,6 +39,19 @@ export const CustomersPage: React.FC = () => {
   const customerDetail = customerDetailResponse
     ? mapCustomerDetailToAdmin(customerDetailResponse)
     : null;
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'ACTIVE' | 'INACTIVE' }) =>
+      customerService.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'customers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'customer', selectedCustomerId] });
+      toast.success('Customer status updated successfully');
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err, 'Failed to update customer status'));
+    },
+  });
 
   const handleOpenDetails = (customer: Customer) => {
     setSelectedCustomerId(customer.id);
@@ -96,6 +111,7 @@ export const CustomersPage: React.FC = () => {
         onClose={handleCloseDetails}
         customer={customerDetail ?? customers.find((c) => c.id === selectedCustomerId) ?? null}
         orderHistory={customerDetailResponse?.orders}
+        onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
       />
     </div>
   );

@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { orderService } from '../../services';
+import { getErrorMessage } from '../../utils/getErrorMessage';
+import type { OrderStatus, PaymentStatus } from '../../types';
 
 interface OrderDetailModalProps {
   orderId: string; // the UUID id, not orderNumber
@@ -24,11 +27,47 @@ const paymentColors: Record<string, string> = {
 };
 
 const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose }) => {
+  const queryClient = useQueryClient();
+
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['admin', 'order', orderId],
     queryFn: () => orderService.getById(orderId),
     enabled: !!orderId,
   });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (newStatus: OrderStatus) =>
+      orderService.updateStatus(orderId, { status: newStatus }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'order', orderId] });
+      toast.success('Order status updated successfully');
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err, 'Failed to update order status'));
+    },
+  });
+
+  const handleStatusChange = (newStatus: OrderStatus) => {
+    updateStatusMutation.mutate(newStatus);
+  };
+
+  const updatePaymentStatusMutation = useMutation({
+    mutationFn: (newStatus: PaymentStatus) =>
+      orderService.updatePayment(orderId, { status: newStatus }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'order', orderId] });
+      toast.success('Payment status updated successfully');
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err, 'Failed to update payment status'));
+    },
+  });
+
+  const handlePaymentStatusChange = (newStatus: PaymentStatus) => {
+    updatePaymentStatusMutation.mutate(newStatus);
+  };
 
   // Close on Escape
   useEffect(() => {
@@ -96,13 +135,43 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
             <>
               {/* Status row */}
               <div className="flex flex-wrap items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[(order as any).status] ?? 'bg-gray-100 text-gray-600'}`}>
-                  {(order as any).status}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-400 uppercase">Status:</span>
+                  <select
+                    value={(order as any).status}
+                    onChange={(e) => handleStatusChange(e.target.value as OrderStatus)}
+                    disabled={updateStatusMutation.isPending}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border border-transparent focus:ring-2 focus:ring-tiko-primary cursor-pointer transition-all ${statusColors[(order as any).status] ?? 'bg-gray-100 text-gray-600'}`}
+                  >
+                    {((order as any).status === 'PENDING') && (
+                      <option value="PENDING" className="bg-white text-gray-700 font-bold">PENDING</option>
+                    )}
+                    <option value="PROCESSING" className="bg-white text-gray-700 font-bold">PROCESSING</option>
+                    <option value="SHIPPED" className="bg-white text-gray-700 font-bold">SHIPPED</option>
+                    <option value="DELIVERED" className="bg-white text-gray-700 font-bold">DELIVERED</option>
+                    <option value="CANCELLED" className="bg-white text-gray-700 font-bold">CANCELLED</option>
+                  </select>
+                </div>
                 {payment && (
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${paymentColors[payment.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                    Payment: {payment.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-400 uppercase">Payment:</span>
+                    <select
+                      value={payment.status}
+                      onChange={(e) => handlePaymentStatusChange(e.target.value as PaymentStatus)}
+                      disabled={updatePaymentStatusMutation.isPending}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border border-transparent focus:ring-2 focus:ring-tiko-primary cursor-pointer transition-all ${paymentColors[payment.status] ?? 'bg-gray-100 text-gray-600'}`}
+                    >
+                      <option value="PENDING" className="bg-white text-gray-700 font-bold">PENDING</option>
+                      {payment.status === 'AUTHORIZED' && (
+                        <option value="AUTHORIZED" className="bg-white text-gray-700 font-bold">AUTHORIZED</option>
+                      )}
+                      <option value="PAID" className="bg-white text-gray-700 font-bold">PAID</option>
+                      <option value="FAILED" className="bg-white text-gray-700 font-bold">FAILED</option>
+                      {payment.status === 'REFUNDED' && (
+                        <option value="REFUNDED" className="bg-white text-gray-700 font-bold">REFUNDED</option>
+                      )}
+                    </select>
+                  </div>
                 )}
                 <span className="text-xs text-gray-400 ml-auto">
                   {new Date((order as any).placedAt).toLocaleString('en-US', {

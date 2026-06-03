@@ -89,4 +89,31 @@ export const deleteCloudinaryImage = async (publicId: string): Promise<void> => 
   await cloudinary.uploader.destroy(publicId);
 };
 
+export const uploadUserAvatar = async (
+  buffer: Buffer,
+  userId: string
+): Promise<string> => {
+  if (!isCloudinaryConfigured()) {
+    throw new Error('CLOUDINARY_NOT_CONFIGURED');
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `tiko/avatars/${userId}`,
+        resource_type: 'image',
+        transformation: [{ quality: 'auto', fetch_format: 'auto', width: 250, height: 250, crop: 'fill' }],
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error('Cloudinary upload failed'));
+          return;
+        }
+        resolve(result.secure_url);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
 export default cloudinary;

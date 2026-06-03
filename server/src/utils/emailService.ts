@@ -4,11 +4,14 @@ import nodemailer from 'nodemailer';
 // In development we use Ethereal (fake SMTP — emails are captured, not sent)
 // In production, swap this for a real SMTP provider (e.g. SendGrid, Resend)
 const createTransporter = async () => {
-  if (process.env.NODE_ENV === 'production') {
+  const useRealSMTP = process.env.NODE_ENV === 'production' || !!process.env.SMTP_USER;
+
+  if (useRealSMTP) {
+    const port = Number(process.env.SMTP_PORT) || 587;
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: false,
+      port,
+      secure: port === 465,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,

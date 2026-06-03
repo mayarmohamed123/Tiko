@@ -48,6 +48,9 @@ export const createOrder = async (req: Request, res: Response) => {
     if (msg === 'INSUFFICIENT_STOCK') {
       return res.status(409).json({ message: 'Insufficient stock for one or more items.' });
     }
+    if (msg === 'CUSTOMER_INACTIVE') {
+      return res.status(403).json({ message: 'Your account is deactivated. You cannot place orders.' });
+    }
     if (msg === 'PRODUCT_NOT_FOUND') {
       return res.status(404).json({ message: 'Product not found.' });
     }

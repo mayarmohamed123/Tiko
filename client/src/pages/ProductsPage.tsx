@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,6 +11,8 @@ import { categoryService, productService } from '../services';
 import { mapApiProductToAdmin } from '../utils/adminMappers';
 import { getErrorMessage } from '../utils/getErrorMessage';
 import type { Category } from '../types';
+import { ConfirmModal } from '../components/common/ConfirmModal';
+
 
 export const ProductsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -18,6 +20,14 @@ export const ProductsPage: React.FC = () => {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void;
+  } | null>(null);
+
 
   const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['admin', 'products'],
@@ -30,7 +40,6 @@ export const ProductsPage: React.FC = () => {
     queryFn: categoryService.list,
   });
 
-  const categoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
 
   const createMutation = useMutation({
     mutationFn: async (payload: {
@@ -89,6 +98,17 @@ export const ProductsPage: React.FC = () => {
     onError: (e) => toast.error(getErrorMessage(e, 'Failed to create category')),
   });
 
+  const deleteCategoryMutation = useMutation({
+    mutationFn: categoryService.remove,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      toast.success('Category and all associated products deleted successfully');
+      setSelectedCategoryFilter('All');
+    },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete category')),
+  });
+
   const handleOpenCreate = () => {
     setEditingProduct(null);
     setIsModalOpen(true);
@@ -100,13 +120,27 @@ export const ProductsPage: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      confirmText: 'Delete Product',
+      onConfirm: () => deleteMutation.mutate(id),
+    });
   };
 
   const handleAddCategory = (categoryName: string) => {
     createCategoryMutation.mutate({ name: categoryName });
+  };
+
+  const handleDeleteCategory = (id: string, name: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete the category "${name}"? This will ALSO soft-delete all products belonging to this category!`,
+      confirmText: 'Delete Category',
+      onConfirm: () => deleteCategoryMutation.mutate(id),
+    });
   };
 
   const handleSaveProduct = (
@@ -208,9 +242,10 @@ export const ProductsPage: React.FC = () => {
       <ProductFilters
         search={search}
         onSearchChange={setSearch}
-        categories={categoryNames}
+        categories={categories as Category[]}
         selectedCategory={selectedCategoryFilter}
         onCategoryChange={setSelectedCategoryFilter}
+        onDeleteCategory={handleDeleteCategory}
       />
 
       <ProductsTable
@@ -227,6 +262,15 @@ export const ProductsPage: React.FC = () => {
         onAddCategory={handleAddCategory}
         onSave={handleSaveProduct}
         isSaving={createMutation.isPending || updateMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(confirmConfig?.isOpen)}
+        title={confirmConfig?.title || ''}
+        message={confirmConfig?.message || ''}
+        confirmText={confirmConfig?.confirmText}
+        onConfirm={confirmConfig?.onConfirm || (() => {})}
+        onCancel={() => setConfirmConfig(null)}
       />
     </div>
   );

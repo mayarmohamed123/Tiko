@@ -15,6 +15,7 @@ export interface AuthUser {
   fullName: string;
   email: string;
   role: UserRole;
+  avatarUrl: string | null;
 }
 
 export interface MeResponse {
@@ -26,6 +27,7 @@ export interface MeResponse {
   role: UserRole;
   isVerified: boolean;
   createdAt: string;
+  avatarUrl: string | null;
 }
 
 export interface RegisterRequest {

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import imagerySection from "../assets/Imagery Section (Left Side for Desktop).webp";
+import imagerySection from "../assets/Imagery Section (Left Side for Desktop).png";
 import { loginSchema, type LoginFormValues } from "../utils/validation";
 import { authService } from "../services";
 import { useAuth } from "../hooks/useAuth";
@@ -54,12 +54,12 @@ const LoginPage: React.FC = () => {
         <div className="absolute inset-0 bg-black/20"></div>
         <div
           className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 md:px-16 lg:px-20"
-          style={{ color: "#FFFBFF" }}>
-          <h1 className="text-display-lg font-outfit leading-tight mb-4 drop-shadow-lg text-4xl sm:text-5xl lg:text-6xl">
+          style={{ color: "#FFFFFF" }}>
+          <p className="text-display-lg font-outfit leading-tight mb-4 drop-shadow-lg text-4xl sm:text-5xl lg:text-6xl">
             Welcome back to
             <br />
             Tiko
-          </h1>
+          </p>
           <p className="text-body-lg max-w-md drop-shadow-md text-base sm:text-lg">
             Experience the curated warmth of our local boutique collective, now
             available at your fingertips.

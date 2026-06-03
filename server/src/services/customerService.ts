@@ -131,3 +131,24 @@ export const softDeleteCustomer = async (id: string) => {
     data: { deletedAt: new Date(), status: 'INACTIVE' },
   });
 };
+
+export const updateCustomerStatus = async (id: string, status: 'ACTIVE' | 'INACTIVE') => {
+  const customer = await prisma.customer.findFirst({
+    where: { id, ...notDeleted },
+  });
+  if (!customer) throw new Error('CUSTOMER_NOT_FOUND');
+
+  const updated = await prisma.customer.update({
+    where: { id },
+    data: { status },
+  });
+
+  return {
+    id: updated.id,
+    name: updated.fullName,
+    email: updated.email,
+    phone: updated.phone,
+    address: updated.defaultAddress,
+    status: updated.status.toLowerCase(),
+  };
+};

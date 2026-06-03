@@ -20,4 +20,20 @@ export const authService = {
 
   forgotPassword: (email: string) =>
     api.post<ApiMessageResponse>('/auth/forgot-password', { email }).then((r) => r.data),
+
+  updateProfile: (data: { fullName?: string; email?: string; phone?: string; address?: string }) =>
+    api.patch<{ message: string; user: MeResponse }>('/auth/profile', data).then((r) => r.data),
+
+  changePassword: (data: any) =>
+    api.post<ApiMessageResponse>('/auth/change-password', data).then((r) => r.data),
+
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return api
+      .patch<{ message: string; user: MeResponse }>('/auth/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
 };

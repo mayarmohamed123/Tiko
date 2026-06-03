@@ -31,11 +31,8 @@ export const createCategory = async (req: Request, res: Response) => {
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
     await categoryService.softDeleteCategory(paramId(req.params.id));
-    res.json({ message: 'Category deleted.' });
+    res.json({ message: 'Category and all associated products deleted successfully.' });
   } catch (e: unknown) {
-    if ((e as Error).message === 'CATEGORY_HAS_PRODUCTS') {
-      return res.status(409).json({ message: 'Category has active products.' });
-    }
     res.status(500).json({ message: 'Failed to delete category.' });
   }
 };

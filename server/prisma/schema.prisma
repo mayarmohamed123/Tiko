@@ -55,6 +55,7 @@ model User {
   password            String
   phone               String?
   address             String?
+  avatarUrl           String?
   role                Role      @default(CUSTOMER)
   isActive            Boolean   @default(true)
   isVerified          Boolean   @default(false)
