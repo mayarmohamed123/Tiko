@@ -13,9 +13,9 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images }) => {
   }, [images]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Main Large Image */}
-      <div className="aspect-4/5 rounded-[2.5rem] overflow-hidden bg-tiko-surface-container-low shadow-sm">
+      <div className="aspect-square rounded-2xl overflow-hidden bg-tiko-surface-container-low shadow-sm">
         <img
           src={activeImage || undefined}
           alt="Product Detail"

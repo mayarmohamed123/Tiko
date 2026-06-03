@@ -178,7 +178,7 @@ model Order {
   shippingPhone      String
   shippingStreet     String
   deliveryZoneId     String?
-  currency           String      @default("JOD")
+  currency           String      @default("EGP")
   subtotal           Int
   deliveryFee        Int
   taxAmount          Int         @default(0)
@@ -209,6 +209,8 @@ model OrderItem {
   productId       String?
   productName     String
   productMaterial String?
+  selectedColor   String?
+  selectedSize    String?
   unitPrice       Int
   quantity        Int
   lineTotal       Int
@@ -228,6 +230,7 @@ model Payment {
   amount               Int
   paidAt               DateTime?
   instapayReference    String?
+  transactionImageUrl  String?
   gatewayTransactionId String?
   gatewayPayload       Json?
   createdAt            DateTime      @default(now())
@@ -253,7 +256,7 @@ model OrderStatusHistory {
 
 model StoreSettings {
   id                  String   @id @default("default")
-  currency            String   @default("JOD")
+  currency            String   @default("EGP")
   defaultDeliveryFee  Int      @default(350)
   taxRate             Float    @default(0)
   lowStockThreshold   Int      @default(5)

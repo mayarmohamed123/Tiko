@@ -53,7 +53,7 @@ const BestSellerRow: React.FC<BestSellerItemProps> = ({ product }) => {
           {product.name}
         </p>
         <p className="text-sm text-tiko-on-surface-variant">
-          {product.price.toFixed(2)} JOD
+          {product.price.toFixed(2)} EGP
         </p>
       </div>
 
@@ -93,7 +93,7 @@ const FeatureImage: React.FC<{ product?: ApiProduct }> = ({ product }) => {
           brought a sense of peace and beauty to my living room."
         </p>
         <p className="text-xs font-outfit font-bold text-tiko-on-surface-variant uppercase tracking-widest">
-          — Sarah K., Amman
+          — Sarah K., Cairo
         </p>
       </div>
     </div>
@@ -109,7 +109,7 @@ const BestSellersSection: React.FC = () => {
   });
 
   return (
-    <section className="py-16 lg:py-24 bg-tiko-surface-container-low">
+    <section id="best-sellers" className="py-16 lg:py-24 bg-tiko-surface-container-low">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 

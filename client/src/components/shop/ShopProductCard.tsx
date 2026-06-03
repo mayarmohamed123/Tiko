@@ -71,7 +71,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
             <h3 className="text-sm font-outfit font-bold text-tiko-on-surface leading-snug flex-1 group-hover:text-tiko-primary transition-colors">
               {product.name}
             </h3>
-            <span className="text-sm font-bold text-tiko-primary font-outfit shrink-0">${product.price.toFixed(2)}</span>
+            <span className="text-sm font-bold text-tiko-primary font-outfit shrink-0">{product.price.toFixed(2)} EGP</span>
           </div>
 
           <p className="text-xs text-tiko-on-surface-variant line-clamp-2 leading-relaxed mb-4 flex-1">

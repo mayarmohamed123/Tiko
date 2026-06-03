@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as orderController from '../controllers/orderController.js';
 import { adminMiddleware, authMiddleware } from '../middleware/authMiddleware.js';
+import { transactionUpload } from '../middleware/uploadMiddleware.js';
 
 const router = Router();
 
@@ -12,6 +13,13 @@ router.post('/', (req, res, next) => {
   }
   return orderController.createOrder(req, res);
 });
+
+// Transaction image upload — public (guest may upload after order placed)
+router.post(
+  '/:id/transaction-image',
+  transactionUpload.single('image'),
+  orderController.uploadTransactionImage
+);
 
 // Admin
 router.get('/stats', adminMiddleware, orderController.dashboardStats);

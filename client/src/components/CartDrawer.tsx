@@ -86,7 +86,7 @@ const CartDrawer: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-outfit font-bold text-sm text-tiko-on-surface leading-snug">{item.name}</p>
-                    <span className="text-sm font-bold text-tiko-primary shrink-0">{(item.price * item.qty).toLocaleString()} EGP</span>
+                    <span className="text-sm font-bold text-tiko-primary shrink-0">{((item.price * item.qty) / 100).toFixed(2)} EGP</span>
                   </div>
 
                   <p className="text-xs text-tiko-on-surface-variant mt-0.5">{item.detail}</p>
@@ -148,7 +148,7 @@ const CartDrawer: React.FC = () => {
           <div className="border-t border-tiko-outline-variant px-6 pt-5 pb-6 bg-tiko-surface space-y-3">
             <div className="flex justify-between text-sm text-tiko-on-surface-variant">
               <span>Subtotal</span>
-              <span className="font-dm-sans">{subtotal.toLocaleString()} EGP</span>
+              <span className="font-dm-sans">{((subtotal) / 100).toFixed(2)} EGP</span>
             </div>
             <div className="flex justify-between text-sm text-tiko-on-surface-variant">
               <span>Delivery</span>
@@ -156,7 +156,7 @@ const CartDrawer: React.FC = () => {
             </div>
             <div className="flex justify-between text-base font-bold text-tiko-on-surface pt-2 border-t border-tiko-outline-variant">
               <span>Total</span>
-              <span className="font-outfit text-lg">{subtotal.toLocaleString()} EGP</span>
+              <span className="font-outfit text-lg">{((subtotal) / 100).toFixed(2)} EGP</span>
             </div>
 
             <Link

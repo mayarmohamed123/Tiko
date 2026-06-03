@@ -48,6 +48,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
       price: Math.round(product.price * 100), // cart stores price in minor units (cents)
       image: product.images[0] || '',
       detail: detailString,
+      selectedColor: selectedColor || undefined,
+      selectedSize: selectedSize || undefined,
     });
     
     setTimeout(() => {
@@ -60,11 +62,11 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
     <div className="flex flex-col gap-8 h-full sticky top-24">
       {/* Title & Price */}
       <div className="space-y-2">
-        <h1 className="font-outfit font-bold text-4xl lg:text-5xl text-tiko-on-surface leading-[1.1]">
+        <h1 className="font-outfit font-bold text-2xl lg:text-3xl text-tiko-on-surface leading-tight">
           {product.name}
         </h1>
         <div className="flex items-center justify-between pt-1">
-          <p className="text-xl font-bold text-tiko-primary font-outfit">
+          <p className="text-lg font-bold text-tiko-primary font-outfit">
             {product.price.toFixed(2)} {product.currency}
           </p>
           <div className="flex items-center gap-1.5 bg-tiko-tertiary-container/20 px-3 py-1 rounded-full border border-tiko-tertiary-container/30">
@@ -125,12 +127,12 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
       <button
         onClick={handleAddToBag}
         disabled={isAdding || !product.inStock}
-        className={`group relative w-full py-5 rounded-full font-outfit font-bold text-sm tracking-widest overflow-hidden transition-all duration-500 active:scale-[0.98] disabled:cursor-not-allowed
+        className={`group relative w-full py-4 rounded-full font-outfit font-bold text-sm tracking-widest overflow-hidden transition-all duration-500 active:scale-[0.98] disabled:cursor-not-allowed
           ${!product.inStock 
             ? 'bg-tiko-surface-container text-tiko-on-surface-variant' 
             : isAdding 
             ? 'bg-tiko-tertiary text-white' 
-            : 'bg-tiko-primary text-white shadow-xl shadow-tiko-primary/30 hover:shadow-tiko-primary/40'}`}
+            : 'bg-tiko-primary text-white shadow-lg shadow-tiko-primary/20 hover:shadow-tiko-primary/30'}`}
       >
         <span className={`flex items-center justify-center gap-2 transition-all duration-300 ${isAdding ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
           {product.inStock ? 'ADD TO TIKO BAG' : 'OUT OF STOCK'}

@@ -90,7 +90,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
 
                   {/* Price */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-tiko-primary">
-                    ${product.price.toFixed(2)}
+                    EGP {product.price.toFixed(2)}
                   </td>
 
                   {/* Stock */}

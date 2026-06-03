@@ -77,7 +77,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({ current
                   {prod.name}
                 </h3>
                 <p className="font-dm-sans font-bold text-sm text-tiko-outline">
-                  {prod.price.toFixed(2)} JOD
+                  {prod.price.toFixed(2)} EGP
                 </p>
               </div>
             </Link>

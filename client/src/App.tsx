@@ -34,6 +34,7 @@ function App() {
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/product/:id" element={<ProductDetailsPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="*" element={<HomePage />} />
               </Route>
 
               {/* No Layout (Full Page) Routes */}
@@ -51,9 +52,6 @@ function App() {
                   <Route path="/dashboard/customers" element={<CustomersPage />} />
                 </Route>
               </Route>
-
-              {/* Catch all */}
-              <Route path="*" element={<HomePage />} />
             </Routes>
           </Router>
           <Toaster position="top-right" />

@@ -7,7 +7,8 @@ import {
   ShoppingCart, 
   Users, 
   Settings, 
-  User as UserIcon
+  User as UserIcon,
+  LogOut
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -23,7 +24,16 @@ const navItems = [
 ];
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = '/login';
+    } catch (e) {
+      console.error('Logout failed', e);
+    }
+  };
 
   return (
     <aside className="w-64 border-r border-tiko-surface-container-high bg-tiko-background hidden md:flex flex-col">
@@ -50,14 +60,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab }) => {
       </nav>
 
       <div className="p-4 border-t border-tiko-surface-container-high m-4">
-        <div className="flex items-center space-x-3 px-2">
-          <div className="w-10 h-10 bg-tiko-surface-container-high rounded-full flex items-center justify-center text-tiko-primary">
-            <UserIcon className="w-5 h-5" />
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center space-x-3 px-2">
+            <div className="w-10 h-10 bg-tiko-surface-container-high rounded-full flex items-center justify-center text-tiko-primary">
+              <UserIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-tiko-on-surface">{user?.fullName || 'Admin User'}</p>
+              <p className="text-xs text-tiko-on-surface-variant">Store Owner</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-tiko-on-surface">{user?.fullName || 'Admin User'}</p>
-            <p className="text-xs text-tiko-on-surface-variant">Store Owner</p>
-          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center space-x-2 text-tiko-error hover:bg-red-50 px-4 py-2 rounded-full transition-colors w-full"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm font-bold">Log Out</span>
+          </button>
         </div>
       </div>
     </aside>

@@ -154,6 +154,8 @@ export const createOrder = async (
       productId: p.id,
       productName: p.name,
       productMaterial: p.material,
+      selectedColor: item.selectedColor ?? null,
+      selectedSize: item.selectedSize ?? null,
       unitPrice,
       quantity: item.quantity,
       lineTotal,
@@ -349,4 +351,16 @@ export const getDashboardStats = async () => {
     averageOrderValue: (revenueAgg._avg.totalAmount ?? 0) / 100,
     recentOrders: recentOrders.map(formatOrderListItem),
   };
+};
+
+export const saveTransactionImageUrl = async (
+  orderId: string,
+  url: string
+) => {
+  const payment = await prisma.payment.findUnique({ where: { orderId } });
+  if (!payment) throw new Error('ORDER_NOT_FOUND');
+  return prisma.payment.update({
+    where: { orderId },
+    data: { transactionImageUrl: url },
+  });
 };

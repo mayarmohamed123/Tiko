@@ -7,6 +7,8 @@ export interface CartItem {
   image: string;
   qty: number;
   lowStock?: boolean;
+  selectedColor?: string;
+  selectedSize?: string;
 }
 
 export interface CartContextValue {

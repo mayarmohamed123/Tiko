@@ -5,6 +5,7 @@ import type {
   OrdersListResponse,
   UpdateOrderStatusRequest,
   UpdatePaymentStatusRequest,
+  CreateOrderRequest,
 } from '../types';
 import type { PaymentDetail } from '../types/order';
 
@@ -28,4 +29,17 @@ export const orderService = {
 
   updatePayment: (id: string, data: UpdatePaymentStatusRequest) =>
     api.patch<PaymentDetail>(`/orders/${id}/payment`, data).then((r) => r.data),
+
+  create: (data: CreateOrderRequest) =>
+    api.post<OrderDetail>('/orders', data).then((r) => r.data),
+
+  uploadTransactionImage: (orderId: string, file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api
+      .post<{ transactionImageUrl: string }>(`/orders/${orderId}/transaction-image`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
 };

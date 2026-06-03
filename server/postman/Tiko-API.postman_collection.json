@@ -335,6 +335,24 @@
             },
             "url": "{{baseUrl}}/api/orders/{{orderId}}/payment"
           }
+        },
+        {
+          "name": "POST /api/orders/:id/transaction-image (public)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "description": "InstaPay transaction screenshot (JPG/PNG, max 10 MB)"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/orders/{{orderId}}/transaction-image",
+            "description": "Uploads the customer's InstaPay payment screenshot. Public endpoint — no auth required so guest customers can submit their proof of payment. The URL is stored in the Payment record and shown to the admin in the order detail modal."
+          }
         }
       ]
     },
@@ -360,6 +378,50 @@
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/api/customers/{{customerId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "description": "Admin-only analytics endpoints. Require an authenticated admin session (httpOnly cookie).",
+      "item": [
+        {
+          "name": "GET /api/analytics/sales",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/sales?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "sales"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30",
+                  "description": "Number of days to look back. Omit for all-time data."
+                }
+              ]
+            },
+            "description": "Returns daily aggregated revenue and order count. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "GET /api/analytics/popular-products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/popular-products?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "popular-products"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30",
+                  "description": "Number of days to look back. Omit for all-time data."
+                }
+              ]
+            },
+            "description": "Returns the top 10 products ranked by quantity sold. Requires ADMIN role."
           }
         }
       ]

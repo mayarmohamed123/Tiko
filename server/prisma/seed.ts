@@ -25,10 +25,10 @@ const CATEGORIES = [
 ];
 
 const DELIVERY_ZONES = [
-  { code: 'amman-west', name: 'Amman – West', fee: 350 },
-  { code: 'amman-east', name: 'Amman – East', fee: 350 },
-  { code: 'zarqa', name: 'Zarqa', fee: 500 },
-  { code: 'aqaba', name: 'Aqaba', fee: 800 },
+  { code: 'cairo', name: 'Cairo', fee: 5000 },
+  { code: 'giza', name: 'Giza', fee: 5000 },
+  { code: 'alexandria', name: 'Alexandria', fee: 8000 },
+  { code: 'sahel', name: 'North Coast (Sahel)', fee: 15000 },
 ];
 
 const PRODUCTS = [
@@ -90,11 +90,11 @@ async function main() {
     where: { id: 'default' },
     create: {
       id: 'default',
-      currency: 'JOD',
-      defaultDeliveryFee: 350,
+      currency: 'EGP',
+      defaultDeliveryFee: 5000,
       lowStockThreshold: 5,
     },
-    update: { lowStockThreshold: 5 },
+    update: { currency: 'EGP', defaultDeliveryFee: 5000, lowStockThreshold: 5 },
   });
 
   // Delivery zones

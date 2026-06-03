@@ -35,7 +35,7 @@ const ProductDetailsPage: React.FC = () => {
       id: product.id,
       name: product.name,
       price: product.price,
-      currency: 'JOD',
+      currency: 'EGP',
       inStock: product.availability !== 'sold-out',
       breadcrumbs: ['Shop All', product.category, product.name],
       colors: product.colors ?? [],
@@ -48,7 +48,7 @@ const ProductDetailsPage: React.FC = () => {
         'Sourced from regional workshops',
         'Ethical & sustainable materials',
       ],
-      shipping: 'Free standard delivery on all orders over 100 JOD. Standard delivery takes 2-3 business days within Amman.',
+      shipping: 'Free standard delivery on all orders over 1000 EGP. Standard delivery takes 2-3 business days within Cairo.',
       returns: 'Easy 14-day returns and exchanges on non-used, original packaging items.',
       material: product.material,
     };
@@ -125,14 +125,14 @@ const ProductDetailsPage: React.FC = () => {
         ))}
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        {/* Left: Gallery (7 columns) */}
-        <div className="lg:col-span-7">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        {/* Left: Gallery */}
+        <div>
           <ProductGallery images={adaptedProduct.images} />
         </div>
 
-        {/* Right: Info (5 columns) */}
-        <div className="lg:col-span-5">
+        {/* Right: Info */}
+        <div>
           <ProductInfo product={adaptedProduct} />
         </div>
       </div>

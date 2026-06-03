@@ -34,6 +34,8 @@ export interface OrderItemDetail {
   quantity: number;
   lineTotal: number;
   imageUrl: string | null;
+  selectedColor: string | null;
+  selectedSize: string | null;
 }
 
 export interface PaymentDetail {
@@ -76,7 +78,7 @@ export interface UpdatePaymentStatusRequest {
 }
 
 export interface CreateOrderRequest {
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; selectedColor?: string; selectedSize?: string }[];
   shippingFullName: string;
   shippingPhone: string;
   shippingStreet: string;

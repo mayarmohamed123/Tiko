@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const orderItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.number().int().positive(),
+  selectedColor: z.string().optional(),
+  selectedSize: z.string().optional(),
 });
 
 export const createOrderSchema = z.object({

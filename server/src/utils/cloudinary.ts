@@ -57,6 +57,33 @@ export const uploadProductImage = async (
   });
 };
 
+export const uploadTransactionImage = async (
+  buffer: Buffer,
+  orderId: string
+): Promise<string> => {
+  if (!isCloudinaryConfigured()) {
+    throw new Error('CLOUDINARY_NOT_CONFIGURED');
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `tiko/transactions/${orderId}`,
+        resource_type: 'image',
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error('Cloudinary upload failed'));
+          return;
+        }
+        resolve(result.secure_url);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
 export const deleteCloudinaryImage = async (publicId: string): Promise<void> => {
   if (!isCloudinaryConfigured()) return;
   await cloudinary.uploader.destroy(publicId);

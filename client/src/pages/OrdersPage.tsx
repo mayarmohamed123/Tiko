@@ -91,7 +91,7 @@ const OrdersPage: React.FC = () => {
         <StatCard
           title="Average Order Value"
           value={
-            stats ? `$${stats.averageOrderValue.toFixed(2)}` : '—'
+            stats ? `EGP ${stats.averageOrderValue.toFixed(2)}` : '—'
           }
           subtitle="All non-cancelled orders"
           subtitleColor="text-tiko-on-surface-variant"

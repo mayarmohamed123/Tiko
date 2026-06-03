@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/useCart';
 
 const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { toggleCart, totalItems } = useCart();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -19,6 +21,23 @@ const Navbar: React.FC = () => {
     { label: 'Best Sellers', to: '/best-sellers' },
     { label: 'Contact Us', to: '/contact' },
   ];
+
+  const handleNavLinkClick = (e: React.MouseEvent, to: string) => {
+    if (to === '/new-arrivals' || to === '/best-sellers') {
+      e.preventDefault();
+      const sectionId = to === '/new-arrivals' ? 'new-arrivals' : 'best-sellers';
+      
+      if (location.pathname === '/') {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        navigate('/', { state: { scrollTo: sectionId } });
+      }
+      setMenuOpen(false);
+    }
+  };
 
   return (
     <header
@@ -45,6 +64,7 @@ const Navbar: React.FC = () => {
               <NavLink
                 key={label}
                 to={to}
+                onClick={(e) => handleNavLinkClick(e, to)}
                 className={({ isActive }) =>
                   `text-sm font-medium transition-colors hover:text-tiko-primary ${
                     isActive
@@ -131,7 +151,12 @@ const Navbar: React.FC = () => {
               <NavLink
                 key={label}
                 to={to}
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  handleNavLinkClick(e, to);
+                  if (to !== '/new-arrivals' && to !== '/best-sellers') {
+                    setMenuOpen(false);
+                  }
+                }}
                 className="block px-2 py-3 text-sm font-medium text-tiko-on-surface-variant hover:text-tiko-primary transition-colors"
               >
                 {label}

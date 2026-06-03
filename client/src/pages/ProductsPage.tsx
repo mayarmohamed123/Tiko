@@ -198,7 +198,7 @@ export const ProductsPage: React.FC = () => {
         />
         <StatCard
           title="Average Product Price"
-          value={`$${averagePrice}`}
+          value={`EGP ${averagePrice}`}
           subtitle="Based on currently listed items"
           subtitleColor="text-tiko-on-surface-variant"
           bgColor="bg-tiko-surface"

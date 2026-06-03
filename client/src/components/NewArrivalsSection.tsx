@@ -37,7 +37,7 @@ const NewArrivalsSection: React.FC = () => {
   });
 
   return (
-    <section className="py-16 lg:py-20 bg-tiko-surface">
+    <section id="new-arrivals" className="py-16 lg:py-20 bg-tiko-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex items-end justify-between mb-10">

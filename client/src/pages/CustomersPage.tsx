@@ -79,7 +79,7 @@ export const CustomersPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard title="Total Customers" value={totalCustomers} subtitle="From API" subtitleColor="text-tiko-on-surface-variant" bgColor="bg-tiko-surface" />
         <StatCard title="Active Accounts" value={activeCustomers} subtitle={`${totalCustomers - activeCustomers} inactive`} subtitleColor="text-tiko-on-surface-variant" bgColor="bg-tiko-surface" />
-        <StatCard title="Total Customer Sales" value={`$${totalSpentAll.toFixed(2)}`} subtitle="Aggregated" subtitleColor="text-tiko-on-surface-variant" bgColor="bg-tiko-surface" />
+        <StatCard title="Total Customer Sales" value={`EGP ${totalSpentAll.toFixed(2)}`} subtitle="Aggregated" subtitleColor="text-tiko-on-surface-variant" bgColor="bg-tiko-surface" />
       </div>
 
       <CustomerFilters

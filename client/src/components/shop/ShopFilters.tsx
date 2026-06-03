@@ -13,7 +13,7 @@ interface ShopFiltersProps {
   categories: string[];
 }
 
-const AVAILABILITY = ['Tiko Picks', 'Available Now', 'Ships Locally'];
+const AVAILABILITY = ['Tiko Picks', 'Available Now'];
 
 const ShopFilters: React.FC<ShopFiltersProps> = ({ filters, onChange, categories }) => {
   const toggleCategory = (cat: string) => {
@@ -143,8 +143,8 @@ const ShopFilters: React.FC<ShopFiltersProps> = ({ filters, onChange, categories
           className="w-full accent-tiko-primary h-1.5 rounded-full cursor-pointer"
         />
         <div className="flex justify-between mt-2">
-          <span className="text-xs text-tiko-on-surface-variant font-dm-sans">$0</span>
-          <span className="text-xs font-bold text-tiko-primary font-dm-sans">${filters.priceMax}+</span>
+          <span className="text-xs text-tiko-on-surface-variant font-dm-sans">0 EGP</span>
+          <span className="text-xs font-bold text-tiko-primary font-dm-sans">{filters.priceMax} EGP+</span>
         </div>
       </div>
     </aside>

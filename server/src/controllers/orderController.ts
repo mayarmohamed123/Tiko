@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as orderService from '../services/orderService.js';
+import { uploadTransactionImage as cloudinaryUploadTx } from '../utils/cloudinary.js';
 import { paramId } from '../utils/params.js';
 import {
   createOrderSchema,
@@ -105,5 +106,27 @@ export const dashboardStats = async (_req: Request, res: Response) => {
     res.json(stats);
   } catch {
     res.status(500).json({ message: 'Failed to fetch dashboard stats.' });
+  }
+};
+
+export const uploadTransactionImage = async (req: Request, res: Response) => {
+  const file = req.file as Express.Multer.File | undefined;
+  if (!file) {
+    return res.status(400).json({ message: 'No image provided.' });
+  }
+  try {
+    const orderId = paramId(req.params.id);
+    const url = await cloudinaryUploadTx(file.buffer, orderId);
+    await orderService.saveTransactionImageUrl(orderId, url);
+    res.json({ transactionImageUrl: url });
+  } catch (e: unknown) {
+    const msg = (e as Error).message;
+    if (msg === 'ORDER_NOT_FOUND') {
+      return res.status(404).json({ message: 'Order not found.' });
+    }
+    if (msg === 'CLOUDINARY_NOT_CONFIGURED') {
+      return res.status(503).json({ message: 'Image upload is not configured.' });
+    }
+    res.status(500).json({ message: 'Failed to upload transaction image.' });
   }
 };

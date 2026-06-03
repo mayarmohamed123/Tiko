@@ -37,7 +37,7 @@ const ShopPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile toggle
 
-  // ── Fetch products and categories ──────────────────────────────────────────
+  // ── Fetch products, categories, and best-sellers ──────────────────────────
   const { data: dbProducts = [], isLoading: isProductsLoading } = useQuery({
     queryKey: ['shop-products'],
     queryFn: () => productService.list(),
@@ -47,6 +47,18 @@ const ShopPage: React.FC = () => {
     queryKey: ['shop-categories'],
     queryFn: () => categoryService.list(),
   });
+
+  // Fetch best-sellers to power the "Tiko Picks" availability filter
+  const { data: bestSellers = [] } = useQuery({
+    queryKey: ['shop-best-sellers'],
+    queryFn: () => productService.bestSellers(),
+  });
+
+  // A Set of best-seller IDs for O(1) lookup
+  const bestSellerIds = useMemo(
+    () => new Set(bestSellers.map((p) => p.id)),
+    [bestSellers]
+  );
 
   // Extract category names for dynamic filters and search quick links
   const categories = useMemo(() => {
@@ -78,19 +90,13 @@ const ShopPage: React.FC = () => {
   const filtered = useMemo(() => {
     let list = [...adaptedProducts];
 
-    // Search input (excluding exact category hits)
+    // Frontend search — name only
     if (search && !categories.includes(search)) {
       const q = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.material.toLowerCase().includes(q)
-      );
+      list = list.filter((p) => p.name.toLowerCase().includes(q));
     }
 
-    // Category pill quick select from search bar
+    // Category pill quick-select from search bar
     if (search && categories.includes(search)) {
       list = list.filter((p) => p.category === search);
     }
@@ -101,18 +107,16 @@ const ShopPage: React.FC = () => {
     }
 
     // Availability filter
-    // "Available Now" -> available
-    // "Tiko Picks" -> limited
-    // "Ships Locally" -> not sold-out (i.e. available & limited)
+    // "Available Now" -> products whose availability is not 'sold-out'
+    // "Tiko Picks"    -> products that appear in the best-sellers API response
     if (filters.availability.length > 0) {
-      list = list.filter((p) => {
-        return filters.availability.some((opt) => {
-          if (opt === 'Available Now') return p.availability === 'available';
-          if (opt === 'Tiko Picks') return p.availability === 'limited';
-          if (opt === 'Ships Locally') return p.availability !== 'sold-out';
+      list = list.filter((p) =>
+        filters.availability.some((opt) => {
+          if (opt === 'Available Now') return p.availability !== 'sold-out';
+          if (opt === 'Tiko Picks') return bestSellerIds.has(p.id);
           return true;
-        });
-      });
+        })
+      );
     }
 
     // Price filter
@@ -121,13 +125,10 @@ const ShopPage: React.FC = () => {
     // Sort
     if (sortBy === 'price-asc') list.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-desc') list.sort((a, b) => b.price - a.price);
-    if (sortBy === 'latest') {
-      // Default / latest arrivals. (In real-world, we'd preserve fetched DB order or sort by date,
-      // which productService list endpoint returns already pre-sorted by createdAt desc!)
-    }
+    // 'latest' keeps the default server-returned order (createdAt desc)
 
     return list;
-  }, [search, filters, sortBy, adaptedProducts, categories]);
+  }, [search, filters, sortBy, adaptedProducts, categories, bestSellerIds]);
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
   const paginated = filtered.slice(

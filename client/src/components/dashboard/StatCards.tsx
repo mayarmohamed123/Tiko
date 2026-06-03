@@ -31,7 +31,7 @@ export const StatCards: React.FC = () => {
   ).length;
 
   const revenueEstimate = stats
-    ? `$${(stats.averageOrderValue * (stats.deliveredThisMonth + stats.pendingFulfillment)).toFixed(0)}`
+    ? `EGP ${(stats.averageOrderValue * (stats.deliveredThisMonth + stats.pendingFulfillment)).toFixed(0)}`
     : '—';
 
   return (
@@ -54,7 +54,7 @@ export const StatCards: React.FC = () => {
       />
       <StatCard
         title="Avg Order Value"
-        value={stats ? `$${stats.averageOrderValue.toFixed(2)}` : '—'}
+        value={stats ? `EGP ${stats.averageOrderValue.toFixed(2)}` : '—'}
         icon={<CircleDollarSign className="w-5 h-5" />}
         subtitle={`Est. volume ${revenueEstimate}`}
         subtitleColor="text-tiko-tertiary"

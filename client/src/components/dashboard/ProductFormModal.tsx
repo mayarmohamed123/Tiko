@@ -175,7 +175,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Price (JOD)</label>
+              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Price (EGP)</label>
               <input
                 type="number"
                 min="0"

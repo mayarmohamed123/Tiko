@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AdminOrder } from '../../types/admin';
+import OrderDetailModal from './OrderDetailModal';
 
 export type Order = AdminOrder;
 
@@ -26,6 +27,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   onPageChange,
   itemsPerPage = 5
 }) => {
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Delivered': return 'bg-green-100 text-green-700'; 
@@ -120,7 +122,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                 )}
                 <td className="px-6 py-5 whitespace-nowrap text-sm font-bold text-tiko-on-surface">${order.total.toFixed(2)}</td>
                 <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                  <button className="text-tiko-primary hover:text-tiko-primary-container font-bold text-xs">
+                  <button
+                    onClick={() => setSelectedOrderId(order.orderId)}
+                    className="text-tiko-primary hover:text-tiko-primary-container font-bold text-xs"
+                  >
                     View Details
                   </button>
                 </td>
@@ -170,6 +175,14 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             View All Orders
           </button>
         </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {selectedOrderId && (
+        <OrderDetailModal
+          orderId={selectedOrderId}
+          onClose={() => setSelectedOrderId(null)}
+        />
       )}
     </div>
   );
