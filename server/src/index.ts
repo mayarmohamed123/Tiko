@@ -19,6 +19,7 @@ import paymentMethodRoutes from './routes/paymentMethodRoutes.js';
 import { seedDefaultConfigs } from './services/paymentMethodService.js';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // Middleware
