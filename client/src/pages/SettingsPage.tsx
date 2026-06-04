@@ -69,7 +69,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   // Role is returned in the /auth/me response as part of the User object
-  const isAdmin = (me as Record<string, unknown>)?.role === 'ADMIN';
+  const isAdmin = me?.role === 'ADMIN';
 
   if (isLoading) return <PageLoader />;
 
