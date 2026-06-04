@@ -42,4 +42,14 @@ export const orderService = {
       })
       .then((r) => r.data);
   },
+
+  uploadTempTransactionImage: (file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api
+      .post<{ transactionImageUrl: string }>('/orders/upload-transaction', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
 };

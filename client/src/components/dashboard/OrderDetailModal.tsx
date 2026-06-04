@@ -267,6 +267,18 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
                         <span className="font-bold text-gray-900">{payment.instapayReference}</span>
                       </div>
                     )}
+                    {payment.instapaySenderEmail && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Sender Email / IPA</span>
+                        <span className="font-bold text-gray-900">{payment.instapaySenderEmail}</span>
+                      </div>
+                    )}
+                    {payment.instapaySenderPhone && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Sender Phone</span>
+                        <span className="font-bold text-gray-900">{payment.instapaySenderPhone}</span>
+                      </div>
+                    )}
                     {payment.paidAt && (
                       <div className="flex justify-between">
                         <span className="text-gray-500">Paid At</span>
@@ -278,6 +290,57 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
                       </div>
                     )}
                   </div>
+
+                  {/* ── Instapay Config Snapshot ── */}
+                  {payment.method === 'INSTAPAY' && payment.instapayConfigSnapshot && (
+                    <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-4 space-y-2.5 text-xs">
+                      <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">
+                        Merchant Instapay Config Snapshot (at placement)
+                      </p>
+                      {payment.instapayConfigSnapshot.email && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">InstaPay Address (IPA)</span>
+                          <span className="font-bold text-gray-900">{payment.instapayConfigSnapshot.email}</span>
+                        </div>
+                      )}
+                      {payment.instapayConfigSnapshot.phone && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Phone Number</span>
+                          <span className="font-bold text-gray-900">{payment.instapayConfigSnapshot.phone}</span>
+                        </div>
+                      )}
+                      {payment.instapayConfigSnapshot.paymentLink && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Payment Link</span>
+                          <a
+                            href={payment.instapayConfigSnapshot.paymentLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-tiko-primary hover:underline truncate max-w-[200px]"
+                          >
+                            {payment.instapayConfigSnapshot.paymentLink}
+                          </a>
+                        </div>
+                      )}
+                      {payment.instapayConfigSnapshot.qrCodeUrl && (
+                        <div className="flex items-start gap-4 pt-1.5 border-t border-purple-100">
+                          <span className="text-gray-500">QR Code Image</span>
+                          <a
+                            href={payment.instapayConfigSnapshot.qrCodeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-16 h-16 border border-purple-200 rounded-lg p-0.5 bg-white shrink-0 overflow-hidden"
+                          >
+                            <img
+                              src={payment.instapayConfigSnapshot.qrCodeUrl}
+                              alt="Config QR Snapshot"
+                              className="w-full h-full object-contain"
+                            />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* ── Transaction Screenshot ── */}
                   {payment.transactionImageUrl ? (

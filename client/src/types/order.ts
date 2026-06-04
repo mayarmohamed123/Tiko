@@ -38,6 +38,13 @@ export interface OrderItemDetail {
   selectedSize: string | null;
 }
 
+export interface InstapayConfigSnapshot {
+  email?: string;
+  phone?: string;
+  paymentLink?: string;
+  qrCodeUrl?: string;
+}
+
 export interface PaymentDetail {
   id: string;
   orderId: string;
@@ -46,6 +53,10 @@ export interface PaymentDetail {
   amount: number;
   paidAt: string | null;
   instapayReference: string | null;
+  instapaySenderEmail: string | null;
+  instapaySenderPhone: string | null;
+  transactionImageUrl: string | null;
+  instapayConfigSnapshot: InstapayConfigSnapshot | null;
 }
 
 export interface OrderDetail {
@@ -87,4 +98,7 @@ export interface CreateOrderRequest {
   instapayReference?: string;
   notes?: string;
   guestEmail?: string;
+  instapaySenderEmail?: string;
+  instapaySenderPhone?: string;
+  instapayScreenshotUrl?: string;
 }

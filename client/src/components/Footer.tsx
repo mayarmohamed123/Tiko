@@ -31,7 +31,9 @@ const Footer: React.FC = () => {
             {/* Social Icons */}
             <div className="flex items-center gap-3">
               <a
-                href="#"
+                href="https://www.instagram.com/tiko.egy?igsh=MTNraXdodzZsYm9ndQ%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="w-9 h-9 rounded-full border border-tiko-outline-variant flex items-center justify-center text-tiko-on-surface-variant hover:bg-tiko-primary hover:text-white hover:border-tiko-primary transition-all duration-200"
               >
@@ -42,14 +44,14 @@ const Footer: React.FC = () => {
                 </svg>
               </a>
               <a
-                href="#"
-                aria-label="Share"
+                href="https://www.tiktok.com/@tiko.egy1214?_r=1&_t=ZS-96sm57GwTrx"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
                 className="w-9 h-9 rounded-full border border-tiko-outline-variant flex items-center justify-center text-tiko-on-surface-variant hover:bg-tiko-primary hover:text-white hover:border-tiko-primary transition-all duration-200"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z"/>
                 </svg>
               </a>
             </div>

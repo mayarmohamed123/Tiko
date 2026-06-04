@@ -6,6 +6,9 @@ import { CartProvider } from './context/CartProvider';
 import AdminRoute from './routes/AdminRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import ContactPage from './pages/ContactPage';
 import ShopPage from './pages/ShopPage';
@@ -41,6 +44,9 @@ function App() {
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Admin routes (cookie auth + ADMIN role) */}
               <Route element={<AdminRoute />}>

@@ -136,3 +136,32 @@ export const sendPasswordResetEmail = async (
     console.log('📧 Password reset email preview:', nodemailer.getTestMessageUrl(info));
   }
 };
+
+// ─── Send Contact Form Email ──────────────────────────────────────────────────
+export const sendContactFormEmail = async (
+  fromName: string,
+  fromEmail: string,
+  message: string
+): Promise<void> => {
+  const transporter = await createTransporter();
+
+  await transporter.sendMail({
+    from: `"Tiko Contact Form" <${process.env.SMTP_USER || 'noreply@tiko.com'}>`,
+    to: 'tiko94307@gmail.com',
+    replyTo: fromEmail,
+    subject: `New Message from ${fromName} via Tiko Contact Form`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px;">
+        <h2 style="color: #7C3AED; border-bottom: 2px solid #7C3AED; padding-bottom: 10px; margin-top: 0;">New Contact Form Submission</h2>
+        <p style="margin: 10px 0;"><strong>Name:</strong> ${fromName}</p>
+        <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${fromEmail}" style="color: #7C3AED; text-decoration: none;">${fromEmail}</a></p>
+        <p style="margin: 20px 0 10px 0;"><strong>Message:</strong></p>
+        <div style="background-color: #f9f9f9; border-left: 4px solid #7C3AED; padding: 16px; margin: 10px 0; border-radius: 4px; white-space: pre-wrap; font-size: 14px; line-height: 1.5; color: #333;">${message}</div>
+        <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 12px; margin-top: 24px; mb-0;">
+          This message was sent via the contact form on Tiko.
+        </p>
+      </div>
+    `,
+  });
+};
+

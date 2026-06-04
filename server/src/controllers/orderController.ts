@@ -54,8 +54,11 @@ export const createOrder = async (req: Request, res: Response) => {
     if (msg === 'PRODUCT_NOT_FOUND') {
       return res.status(404).json({ message: 'Product not found.' });
     }
-    if (msg === 'INSTAPAY_REFERENCE_REQUIRED') {
-      return res.status(400).json({ message: 'InstaPay reference is required.' });
+    if (msg === 'INSTAPAY_SCREENSHOT_REQUIRED') {
+      return res.status(400).json({ message: 'InstaPay transaction screenshot is required.' });
+    }
+    if (msg === 'INSTAPAY_SENDER_INFO_REQUIRED') {
+      return res.status(400).json({ message: 'InstaPay sender email or phone number is required.' });
     }
     res.status(500).json({ message: 'Failed to create order.' });
   }
@@ -128,6 +131,23 @@ export const uploadTransactionImage = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Order not found.' });
     }
     if (msg === 'CLOUDINARY_NOT_CONFIGURED') {
+      return res.status(503).json({ message: 'Image upload is not configured.' });
+    }
+    res.status(500).json({ message: 'Failed to upload transaction image.' });
+  }
+};
+
+export const uploadTempTransactionImage = async (req: Request, res: Response) => {
+  const file = req.file as Express.Multer.File | undefined;
+  if (!file) {
+    return res.status(400).json({ message: 'No image provided.' });
+  }
+  try {
+    const url = await cloudinaryUploadTx(file.buffer, 'temp_' + Date.now());
+    res.json({ transactionImageUrl: url });
+  } catch (e: unknown) {
+    console.error('[OrderController.uploadTempTransactionImage]', e);
+    if ((e as Error).message === 'CLOUDINARY_NOT_CONFIGURED') {
       return res.status(503).json({ message: 'Image upload is not configured.' });
     }
     res.status(500).json({ message: 'Failed to upload transaction image.' });

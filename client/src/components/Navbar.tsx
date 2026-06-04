@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/useCart';
+import { useAuth } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
 
 const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { toggleCart, totalItems } = useCart();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Signed out successfully');
+    navigate('/');
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -92,17 +101,32 @@ const Navbar: React.FC = () => {
               />
             </div>
 
-            {/* Account */}
-            <Link
-              to="/login"
-              className="p-2 text-tiko-on-surface-variant hover:text-tiko-primary transition-colors"
-              aria-label="Account"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </Link>
+            {/* Account / Logout */}
+            {user && user.role !== 'ADMIN' ? (
+              <button
+                onClick={handleLogout}
+                title="Sign out"
+                className="p-2 text-tiko-on-surface-variant hover:text-tiko-primary transition-colors"
+                aria-label="Sign out"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            ) : !user ? (
+              <Link
+                to="/login"
+                className="p-2 text-tiko-on-surface-variant hover:text-tiko-primary transition-colors"
+                aria-label="Account"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </Link>
+            ) : null}
 
             {/* Cart button — opens sliding drawer */}
             <button

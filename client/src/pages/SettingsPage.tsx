@@ -3,10 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { ProfileSettings } from '../components/dashboard/settings/ProfileSettings';
 import { SecuritySettings } from '../components/dashboard/settings/SecuritySettings';
+import { PaymentMethodsSettings } from '../components/dashboard/settings/PaymentMethodsSettings';
 import { PageLoader } from '../components/common/PageLoader';
 import { authService } from '../services';
 import { getErrorMessage } from '../utils/getErrorMessage';
-
 import container from '../assets/Container.webp';
 
 export const SettingsPage: React.FC = () => {
@@ -68,12 +68,15 @@ export const SettingsPage: React.FC = () => {
     changePasswordMutation.mutate(data);
   };
 
+  // Role is returned in the /auth/me response as part of the User object
+  const isAdmin = (me as Record<string, unknown>)?.role === 'ADMIN';
+
   if (isLoading) return <PageLoader />;
 
   return (
     <div className="space-y-8 font-dm-sans max-w-4xl animate-fade-in pb-12">
       <header className="mb-4">
-        <h2 className="text-headline-lg font-outfit text-tiko-on-surface mb-1">Account & Preferences</h2>
+        <h2 className="text-headline-lg font-outfit text-tiko-on-surface mb-1">Account &amp; Preferences</h2>
         <p className="text-tiko-on-surface-variant text-sm">
           Manage your profile identity and security settings.
         </p>
@@ -88,6 +91,19 @@ export const SettingsPage: React.FC = () => {
         />
 
         <SecuritySettings onSavePassword={handleSavePassword} />
+
+        {/* Payment Methods — admin only */}
+        {isAdmin && (
+          <div className="space-y-3">
+            <header>
+              <h2 className="text-headline-lg font-outfit text-tiko-on-surface mb-0.5">Store Settings</h2>
+              <p className="text-tiko-on-surface-variant text-sm">
+                Configure payment methods and store behaviour.
+              </p>
+            </header>
+            <PaymentMethodsSettings />
+          </div>
+        )}
       </div>
     </div>
   );

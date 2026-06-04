@@ -1,12 +1,13 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "../components/Navbar";
 import { useCart } from "../context/useCart";
-import { orderService } from "../services";
+import { orderService, paymentMethodService } from "../services";
 import { useAuth } from "../hooks/useAuth";
 import type { CreateOrderRequest } from "../types";
 
@@ -20,17 +21,23 @@ const deliverySchema = z
       message: "Select a payment method",
     }),
     instapayReference: z.string().optional(),
+    instapaySenderEmail: z.string().optional().refine(val => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Invalid email address"
+    }),
+    instapaySenderPhone: z.string().optional(),
   })
   .refine(
     (data) => {
-      if (data.paymentMethod === "INSTAPAY" && !data.instapayReference?.trim()) {
-        return false;
+      if (data.paymentMethod === "INSTAPAY") {
+        const hasEmail = !!data.instapaySenderEmail?.trim();
+        const hasPhone = !!data.instapaySenderPhone?.trim();
+        return hasEmail || hasPhone;
       }
       return true;
     },
     {
-      message: "Instapay reference or sender name is required",
-      path: ["instapayReference"],
+      message: "At least one of Instapay sender email or phone is required",
+      path: ["instapaySenderEmail"],
     }
   );
 
@@ -181,6 +188,16 @@ const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
   const { items, removeItem } = useCart();
 
+  // Fetch enabled payment methods
+  const { data: paymentMethods = [], isLoading: isPaymentMethodsLoading } = useQuery({
+    queryKey: ["payment-methods", "enabled"],
+    queryFn: () => paymentMethodService.getEnabled(),
+  });
+
+  const isCashEnabled = paymentMethods.some((m) => m.id === "CASH" && m.isEnabled);
+  const isInstapayEnabled = paymentMethods.some((m) => m.id === "INSTAPAY" && m.isEnabled);
+  const instapayConfig = paymentMethods.find((m) => m.id === "INSTAPAY")?.config;
+
   // Transaction image state (InstaPay)
   const [transactionFile, setTransactionFile] = useState<File | null>(null);
   const [transactionPreview, setTransactionPreview] = useState<string | null>(null);
@@ -222,10 +239,25 @@ const CheckoutPage: React.FC = () => {
     defaultValues: {
       paymentMethod: "CASH",
       instapayReference: "",
+      instapaySenderEmail: "",
+      instapaySenderPhone: "",
     },
   });
 
   const selectedPayment = watch("paymentMethod");
+
+  // Keep paymentMethod selection valid if settings change
+  useEffect(() => {
+    if (paymentMethods.length > 0) {
+      const activeMethods = paymentMethods.filter(m => m.isEnabled);
+      if (activeMethods.length > 0) {
+        const isCurrentActive = activeMethods.some(m => m.id === selectedPayment);
+        if (!isCurrentActive) {
+          setValue("paymentMethod", activeMethods[0].id as "CASH" | "INSTAPAY");
+        }
+      }
+    }
+  }, [paymentMethods, selectedPayment, setValue]);
 
   const onSubmit = async (data: DeliveryFormData) => {
     if (items.length === 0) {
@@ -233,8 +265,27 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
+    if (data.paymentMethod === "INSTAPAY" && !transactionFile) {
+      toast.error("Please upload your transaction screenshot to confirm payment.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      let instapayScreenshotUrl: string | undefined;
+
+      // Upload transaction screenshot first
+      if (data.paymentMethod === "INSTAPAY" && transactionFile) {
+        try {
+          const uploadRes = await orderService.uploadTempTransactionImage(transactionFile);
+          instapayScreenshotUrl = uploadRes.transactionImageUrl;
+        } catch {
+          toast.error("Failed to upload payment screenshot. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const payload: CreateOrderRequest = {
         items: items.map((item) => ({
           productId: item.id,
@@ -247,20 +298,13 @@ const CheckoutPage: React.FC = () => {
         shippingStreet: data.streetAddress,
         paymentMethod: data.paymentMethod,
         instapayReference: data.paymentMethod === "INSTAPAY" ? data.instapayReference : undefined,
+        instapaySenderEmail: data.paymentMethod === "INSTAPAY" ? data.instapaySenderEmail : undefined,
+        instapaySenderPhone: data.paymentMethod === "INSTAPAY" ? data.instapaySenderPhone : undefined,
+        instapayScreenshotUrl: instapayScreenshotUrl,
         guestEmail: user?.email || "guest@tiko.com",
       };
 
       const orderResult = await orderService.create(payload);
-
-      // Upload transaction screenshot in the background (non-blocking)
-      if (data.paymentMethod === "INSTAPAY" && transactionFile) {
-        orderService
-          .uploadTransactionImage(orderResult.id, transactionFile)
-          .catch(() => {
-            // Non-fatal — admin can still verify manually
-            console.warn("Transaction image upload failed silently.");
-          });
-      }
 
       toast.success(`Order #${orderResult.orderNumber} placed successfully!`);
 
@@ -271,9 +315,23 @@ const CheckoutPage: React.FC = () => {
 
       // Redirect back to main page
       navigate("/");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      const message = err.response?.data?.message || "Failed to place order. Please try again.";
+      let message = "Failed to place order. Please try again.";
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        err.response &&
+        typeof err.response === "object" &&
+        "data" in err.response &&
+        err.response.data &&
+        typeof err.response.data === "object" &&
+        "message" in err.response.data &&
+        typeof err.response.data.message === "string"
+      ) {
+        message = err.response.data.message;
+      }
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -401,207 +459,278 @@ const CheckoutPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Cash on Delivery */}
-                  <button
-                    type="button"
-                    onClick={() => setValue("paymentMethod", "CASH")}
-                    className={`flex items-center gap-3 px-5 py-4.5 rounded-xl border-2 transition-all text-left
-                      ${
-                        selectedPayment === "CASH"
-                          ? "border-tiko-primary bg-tiko-primary/5"
-                          : "border-tiko-outline-variant hover:border-tiko-primary/50"
-                      }`}>
-                    <svg
-                      className={selectedPayment === "CASH" ? "text-tiko-primary" : "text-tiko-outline"}
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="16" />
-                      <line x1="8" y1="12" x2="16" y2="12" />
+                {isPaymentMethodsLoading ? (
+                  <div className="flex items-center justify-center p-6 text-sm text-tiko-on-surface-variant">
+                    <svg className="animate-spin h-5 w-5 text-tiko-primary mr-2" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <div>
-                      <p className={`text-sm font-outfit font-bold ${selectedPayment === "CASH" ? "text-tiko-primary" : "text-tiko-on-surface"}`}>
-                        Cash on Delivery
-                      </p>
-                      <p className="text-xs text-tiko-on-surface-variant mt-0.5">
-                        Pay at your doorstep
-                      </p>
-                    </div>
-                  </button>
-
-                  {/* InstaPay */}
-                  <button
-                    type="button"
-                    onClick={() => setValue("paymentMethod", "INSTAPAY")}
-                    className={`flex items-center gap-3 px-5 py-4.5 rounded-xl border-2 transition-all text-left
-                      ${
-                        selectedPayment === "INSTAPAY"
-                          ? "border-tiko-primary bg-tiko-primary/5"
-                          : "border-tiko-outline-variant hover:border-tiko-primary/50"
-                      }`}>
-                    <svg
-                      className={selectedPayment === "INSTAPAY" ? "text-tiko-primary" : "text-tiko-outline"}
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                    <div>
-                      <p className={`text-sm font-outfit font-bold ${selectedPayment === "INSTAPAY" ? "text-tiko-primary" : "text-tiko-on-surface"}`}>
-                        InstaPay Transfer
-                      </p>
-                      <p className="text-xs text-tiko-on-surface-variant mt-0.5">
-                        Pay instantly via app
-                      </p>
-                    </div>
-                  </button>
-                </div>
-
-                {/* InstaPay Information View */}
-                {selectedPayment === "INSTAPAY" && (
-                  <div className="bg-tiko-surface-container-low border border-tiko-outline-variant rounded-2xl p-5 space-y-4 animate-in fade-in slide-in-from-top-3 duration-200">
-                    <p className="text-xs font-bold text-tiko-outline uppercase tracking-wider">
-                      InstaPay Transfer Instructions
-                    </p>
-                    
-                    <div className="flex flex-col sm:flex-row gap-5 items-center justify-between">
-                      <div className="space-y-2.5 text-sm flex-1">
-                        <div className="flex justify-between border-b border-tiko-outline-variant pb-1.5">
-                          <span className="text-tiko-on-surface-variant">InstaPay Address (IPA)</span>
-                          <span className="font-bold text-tiko-on-surface">mayar201500@instapay</span>
-                        </div>
-                        <div className="flex justify-between border-b border-tiko-outline-variant pb-1.5">
-                          <span className="text-tiko-on-surface-variant">Phone Number</span>
-                          <span className="font-bold text-tiko-on-surface">01025350571</span>
-                        </div>
-                        <div className="pt-2">
-                          <a
-                            href="https://ipn.eg/S/mayar201500/instapay/5CZr0y"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#5e2b83] text-white rounded-xl text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-all shadow-sm">
-                            Open Payment Link
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
-                            </svg>
-                          </a>
-                        </div>
-                      </div>
-                      
-                      <div className="shrink-0 text-center space-y-1">
-                        <img
-                          src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https%3A%2F%2Fipn.eg%2FS%2Fmayar201500%2Finstapay%2F5CZr0y"
-                          alt="Instapay Scan QR Code"
-                          className="w-32 h-32 border border-tiko-outline-variant rounded-xl p-1 bg-white shadow-sm"
-                        />
-                        <span className="text-[10px] text-tiko-on-surface-variant uppercase tracking-wider block font-bold">
-                          Scan to Pay
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 space-y-4">
-                      {/* Reference / sender name */}
-                      <div>
-                        <label
-                          htmlFor="instapayReference"
-                          className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
-                          Instapay Sender Name / Reference Number
-                        </label>
-                        <input
-                          {...register("instapayReference")}
-                          id="instapayReference"
-                          type="text"
-                          placeholder="Enter sender name or transfer reference code"
-                          className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all placeholder:text-tiko-outline-variant"
-                        />
-                        {errors.instapayReference && (
-                          <p className="mt-1 text-xs text-tiko-error">
-                            {errors.instapayReference.message}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Transaction screenshot upload */}
-                      <div>
-                        <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
-                          Transaction Screenshot
-                          <span className="ml-1 text-tiko-outline font-normal normal-case">(recommended)</span>
-                        </label>
-
-                        {/* Hidden file input */}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileChange}
-                        />
-
-                        {transactionPreview ? (
-                          /* Preview */
-                          <div className="relative w-full rounded-xl overflow-hidden border border-tiko-primary/30 shadow-sm">
-                            <img
-                              src={transactionPreview}
-                              alt="Transaction screenshot preview"
-                              className="w-full max-h-52 object-contain bg-tiko-surface-container"
-                            />
-                            <div className="absolute top-2 right-2 flex gap-2">
-                              <button
-                                type="button"
-                                onClick={handleDropZoneClick}
-                                className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg text-xs font-bold text-tiko-on-surface shadow hover:bg-white transition-all">
-                                Change
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { setTransactionFile(null); setTransactionPreview(null); }}
-                                className="px-3 py-1.5 bg-tiko-error/90 backdrop-blur-sm rounded-lg text-xs font-bold text-white shadow hover:bg-tiko-error transition-all">
-                                Remove
-                              </button>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent px-3 py-2">
-                              <p className="text-[10px] text-white font-bold truncate">{transactionFile?.name}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          /* Drop zone */
-                          <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={handleDropZoneClick}
-                            onDrop={handleDrop}
-                            onDragOver={(e) => e.preventDefault()}
-                            onKeyDown={(e) => e.key === "Enter" && handleDropZoneClick()}
-                            className="w-full border-2 border-dashed border-tiko-outline-variant rounded-xl p-6 text-center cursor-pointer hover:border-tiko-primary/50 hover:bg-tiko-primary/3 transition-all group">
-                            <div className="flex flex-col items-center gap-2">
-                              <div className="w-10 h-10 rounded-full bg-tiko-surface-container flex items-center justify-center group-hover:bg-tiko-primary/10 transition-colors">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-tiko-outline group-hover:text-tiko-primary transition-colors">
-                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                                  <polyline points="21 15 16 10 5 21"/>
-                                </svg>
-                              </div>
-                              <p className="text-sm font-outfit font-bold text-tiko-on-surface-variant group-hover:text-tiko-primary transition-colors">
-                                Upload payment screenshot
-                              </p>
-                              <p className="text-xs text-tiko-outline">
-                                Drag &amp; drop or click to choose · JPG, PNG up to 10MB
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    Loading payment methods...
                   </div>
+                ) : !isCashEnabled && !isInstapayEnabled ? (
+                  <div className="text-center p-6 border border-dashed border-tiko-outline-variant rounded-xl text-tiko-error">
+                    No payment methods are currently available. Please contact support.
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Cash on Delivery */}
+                      {isCashEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setValue("paymentMethod", "CASH")}
+                          className={`flex items-center gap-3 px-5 py-4.5 rounded-xl border-2 transition-all text-left
+                            ${
+                              selectedPayment === "CASH"
+                                ? "border-tiko-primary bg-tiko-primary/5"
+                                : "border-tiko-outline-variant hover:border-tiko-primary/50"
+                            }`}>
+                          <svg
+                            className={selectedPayment === "CASH" ? "text-tiko-primary" : "text-tiko-outline"}
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="16" />
+                            <line x1="8" y1="12" x2="16" y2="12" />
+                          </svg>
+                          <div>
+                            <p className={`text-sm font-outfit font-bold ${selectedPayment === "CASH" ? "text-tiko-primary" : "text-tiko-on-surface"}`}>
+                              Cash on Delivery
+                            </p>
+                            <p className="text-xs text-tiko-on-surface-variant mt-0.5">
+                              Pay at your doorstep
+                            </p>
+                          </div>
+                        </button>
+                      )}
+
+                      {/* InstaPay */}
+                      {isInstapayEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setValue("paymentMethod", "INSTAPAY")}
+                          className={`flex items-center gap-3 px-5 py-4.5 rounded-xl border-2 transition-all text-left
+                            ${
+                              selectedPayment === "INSTAPAY"
+                                ? "border-tiko-primary bg-tiko-primary/5"
+                                : "border-tiko-outline-variant hover:border-tiko-primary/50"
+                            }`}>
+                          <svg
+                            className={selectedPayment === "INSTAPAY" ? "text-tiko-primary" : "text-tiko-outline"}
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                          </svg>
+                          <div>
+                            <p className={`text-sm font-outfit font-bold ${selectedPayment === "INSTAPAY" ? "text-tiko-primary" : "text-tiko-on-surface"}`}>
+                              InstaPay Transfer
+                            </p>
+                            <p className="text-xs text-tiko-on-surface-variant mt-0.5">
+                              Pay instantly via app
+                            </p>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* InstaPay Information View */}
+                    {selectedPayment === "INSTAPAY" && isInstapayEnabled && (
+                      <div className="bg-tiko-surface-container-low border border-tiko-outline-variant rounded-2xl p-5 space-y-4 animate-in fade-in slide-in-from-top-3 duration-200">
+                        <p className="text-xs font-bold text-tiko-outline uppercase tracking-wider">
+                          InstaPay Transfer Instructions
+                        </p>
+                        
+                        <div className="flex flex-col sm:flex-row gap-5 items-center justify-between">
+                          <div className="space-y-2.5 text-sm flex-1 w-full">
+                            {instapayConfig?.email && (
+                              <div className="flex justify-between border-b border-tiko-outline-variant pb-1.5">
+                                <span className="text-tiko-on-surface-variant">InstaPay Address (IPA)</span>
+                                <span className="font-bold text-tiko-on-surface">{instapayConfig.email}</span>
+                              </div>
+                            )}
+                            {instapayConfig?.phone && (
+                              <div className="flex justify-between border-b border-tiko-outline-variant pb-1.5">
+                                <span className="text-tiko-on-surface-variant">Phone Number</span>
+                                <span className="font-bold text-tiko-on-surface">{instapayConfig.phone}</span>
+                              </div>
+                            )}
+                            {instapayConfig?.paymentLink && (
+                              <div className="pt-2">
+                                <a
+                                  href={instapayConfig.paymentLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#5e2b83] text-white rounded-xl text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-all shadow-sm">
+                                  Open Payment Link
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                                  </svg>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {instapayConfig?.qrCodeUrl && (
+                            <div className="shrink-0 text-center space-y-1">
+                              <img
+                                src={instapayConfig.qrCodeUrl}
+                                alt="Instapay Scan QR Code"
+                                className="w-32 h-32 border border-tiko-outline-variant rounded-xl p-1 bg-white shadow-sm object-contain"
+                              />
+                              <span className="text-[10px] text-tiko-on-surface-variant uppercase tracking-wider block font-bold">
+                                Scan to Pay
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-2 space-y-4">
+                          {/* Reference / sender name */}
+                          <div>
+                            <label
+                              htmlFor="instapayReference"
+                              className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
+                              Instapay Reference Number
+                              <span className="ml-1 text-tiko-outline font-normal normal-case">(optional)</span>
+                            </label>
+                            <input
+                              {...register("instapayReference")}
+                              id="instapayReference"
+                              type="text"
+                              placeholder="Enter transfer reference code (if available)"
+                              className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all placeholder:text-tiko-outline-variant"
+                            />
+                            {errors.instapayReference && (
+                              <p className="mt-1 text-xs text-tiko-error">
+                                {errors.instapayReference.message}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Sender details: Email / Phone */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label
+                                htmlFor="instapaySenderEmail"
+                                className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
+                                Sender Instapay Email / IPA
+                              </label>
+                              <input
+                                {...register("instapaySenderEmail")}
+                                id="instapaySenderEmail"
+                                type="text"
+                                placeholder="username@instapay"
+                                className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all placeholder:text-tiko-outline-variant"
+                              />
+                              {errors.instapaySenderEmail && (
+                                <p className="mt-1 text-xs text-tiko-error">
+                                  {errors.instapaySenderEmail.message}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label
+                                htmlFor="instapaySenderPhone"
+                                className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
+                                Sender Instapay Phone Number
+                              </label>
+                              <input
+                                {...register("instapaySenderPhone")}
+                                id="instapaySenderPhone"
+                                type="tel"
+                                placeholder="01XXXXXXXXX"
+                                className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all placeholder:text-tiko-outline-variant"
+                              />
+                              {errors.instapaySenderPhone && (
+                                <p className="mt-1 text-xs text-tiko-error">
+                                  {errors.instapaySenderPhone.message}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Transaction screenshot upload */}
+                          <div>
+                            <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
+                              Transaction Screenshot
+                              <span className="ml-1 text-tiko-error font-bold">*</span>
+                            </label>
+
+                            {/* Hidden file input */}
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleFileChange}
+                            />
+
+                            {transactionPreview ? (
+                              /* Preview */
+                              <div className="relative w-full rounded-xl overflow-hidden border border-tiko-primary/30 shadow-sm">
+                                <img
+                                  src={transactionPreview}
+                                  alt="Transaction screenshot preview"
+                                  className="w-full max-h-52 object-contain bg-tiko-surface-container"
+                                />
+                                <div className="absolute top-2 right-2 flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={handleDropZoneClick}
+                                    className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg text-xs font-bold text-tiko-on-surface shadow hover:bg-white transition-all">
+                                    Change
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setTransactionFile(null); setTransactionPreview(null); }}
+                                    className="px-3 py-1.5 bg-tiko-error/90 backdrop-blur-sm rounded-lg text-xs font-bold text-white shadow hover:bg-tiko-error transition-all">
+                                    Remove
+                                  </button>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent px-3 py-2">
+                                  <p className="text-[10px] text-white font-bold truncate">{transactionFile?.name}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Drop zone */
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={handleDropZoneClick}
+                                onDrop={handleDrop}
+                                onDragOver={(e) => e.preventDefault()}
+                                onKeyDown={(e) => e.key === "Enter" && handleDropZoneClick()}
+                                className="w-full border-2 border-dashed border-tiko-outline-variant rounded-xl p-6 text-center cursor-pointer hover:border-tiko-primary/50 hover:bg-tiko-primary/3 transition-all group">
+                                <div className="flex flex-col items-center gap-2">
+                                  <div className="w-10 h-10 rounded-full bg-tiko-surface-container flex items-center justify-center group-hover:bg-tiko-primary/10 transition-colors">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-tiko-outline group-hover:text-tiko-primary transition-colors">
+                                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                                      <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                  </div>
+                                  <p className="text-sm font-outfit font-bold text-tiko-on-surface-variant group-hover:text-tiko-primary transition-colors">
+                                    Upload payment screenshot
+                                  </p>
+                                  <p className="text-xs text-tiko-outline">
+                                    Drag &amp; drop or click to choose · JPG, PNG up to 10MB
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {errors.paymentMethod && (

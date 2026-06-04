@@ -14,6 +14,9 @@ import customerRoutes from './routes/customerRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import deliveryRoutes from './routes/deliveryRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+import paymentMethodRoutes from './routes/paymentMethodRoutes.js';
+import { seedDefaultConfigs } from './services/paymentMethodService.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -67,6 +70,8 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/delivery-zones', deliveryRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/settings/payment-methods', paymentMethodRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -74,7 +79,8 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await seedDefaultConfigs();
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📝 Swagger docs available at http://localhost:${PORT}/api-docs`);
 });

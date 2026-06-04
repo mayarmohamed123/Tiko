@@ -21,6 +21,13 @@ router.post(
   orderController.uploadTransactionImage
 );
 
+// Temp transaction image upload (before order is placed)
+router.post(
+  '/upload-transaction',
+  transactionUpload.single('image'),
+  orderController.uploadTempTransactionImage
+);
+
 // Admin
 router.get('/stats', adminMiddleware, orderController.dashboardStats);
 router.get('/', adminMiddleware, orderController.listOrders);

@@ -5,6 +5,7 @@ import type {
   LoginResponse,
   MeResponse,
   RegisterRequest,
+  ResetPasswordRequest,
 } from '../types';
 
 export const authService = {
@@ -18,13 +19,19 @@ export const authService = {
   register: (data: RegisterRequest) =>
     api.post<ApiMessageResponse>('/auth/register', data).then((r) => r.data),
 
+  verifyEmail: (token: string) =>
+    api.get<ApiMessageResponse>(`/auth/verify-email?token=${token}`).then((r) => r.data),
+
   forgotPassword: (email: string) =>
     api.post<ApiMessageResponse>('/auth/forgot-password', { email }).then((r) => r.data),
+
+  resetPassword: (data: ResetPasswordRequest) =>
+    api.post<ApiMessageResponse>('/auth/reset-password', data).then((r) => r.data),
 
   updateProfile: (data: { fullName?: string; email?: string; phone?: string; address?: string }) =>
     api.patch<{ message: string; user: MeResponse }>('/auth/profile', data).then((r) => r.data),
 
-  changePassword: (data: any) =>
+  changePassword: (data: unknown) =>
     api.post<ApiMessageResponse>('/auth/change-password', data).then((r) => r.data),
 
   uploadAvatar: (file: File) => {

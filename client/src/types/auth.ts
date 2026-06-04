@@ -38,3 +38,10 @@ export interface RegisterRequest {
   phone?: string;
   address?: string;
 }
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+

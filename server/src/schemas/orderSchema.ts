@@ -15,6 +15,9 @@ export const createOrderSchema = z.object({
   deliveryZoneCode: z.string().optional(),
   paymentMethod: z.enum(['CASH', 'VISA', 'INSTAPAY']),
   instapayReference: z.string().optional(),
+  instapaySenderEmail: z.string().optional(),
+  instapaySenderPhone: z.string().optional(),
+  instapayScreenshotUrl: z.string().optional(),
   notes: z.string().optional(),
   // Guest checkout — used when not logged in
   guestEmail: z.string().email().optional(),

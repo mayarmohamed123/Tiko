@@ -1,20 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import interiorDesign from '../assets/Interior Design.webp';
 
 import { registerSchema, type RegisterFormValues } from '../utils/validation';
+import { authService } from '../services';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 const RegisterPage: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = (data: RegisterFormValues) => {
-    console.log('Registration data:', data);
-    toast.success('Static registration successful (Demo)');
+  const onSubmit = async (data: RegisterFormValues) => {
+    try {
+      await authService.register({
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        phone: data.phone,
+        address: data.address,
+      });
+      toast.success('Registration successful! Please check your email to verify your account.');
+      navigate('/login');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to complete registration'));
+    }
   };
 
   return (
@@ -119,12 +137,26 @@ const RegisterPage: React.FC = () => {
                 <div className="relative">
                   <input
                     {...register('password')}
-                    type="password"
-                    className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full px-4 pr-12 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
                     placeholder="••••••••"
                   />
-                  <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-tiko-on-surface-variant hover:text-tiko-on-surface transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-tiko-on-surface-variant hover:text-tiko-on-surface transition-colors"
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
                 {errors.password && <p className="text-xs text-tiko-error">{errors.password.message}</p>}
@@ -134,12 +166,26 @@ const RegisterPage: React.FC = () => {
                 <div className="relative">
                   <input
                     {...register('confirmPassword')}
-                    type="password"
-                    className="w-full px-4 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    className="w-full px-4 pr-12 py-3 bg-white border border-tiko-outline-variant rounded-tiko-md focus:outline-none focus:ring-2 focus:ring-tiko-primary/20 focus:border-tiko-primary transition-all placeholder:text-tiko-outline-variant"
                     placeholder="••••••••"
                   />
-                  <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-tiko-on-surface-variant hover:text-tiko-on-surface transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-tiko-on-surface-variant hover:text-tiko-on-surface transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
                 {errors.confirmPassword && <p className="text-xs text-tiko-error">{errors.confirmPassword.message}</p>}
@@ -158,12 +204,39 @@ const RegisterPage: React.FC = () => {
               {errors.address && <p className="text-xs text-tiko-error">{errors.address.message}</p>}
             </div>
 
+            {/* Agree to terms */}
+            <div className="space-y-1">
+              <div className="flex items-start gap-2.5">
+                <input
+                  {...register('agreeToTerms')}
+                  type="checkbox"
+                  id="agreeToTerms"
+                  className="mt-1 h-4 w-4 rounded border-tiko-outline-variant text-tiko-primary focus:ring-tiko-primary/20 accent-tiko-primary"
+                />
+                <label htmlFor="agreeToTerms" className="text-xs font-dm-sans text-tiko-on-surface-variant leading-normal">
+                  I agree to the{' '}
+                  <Link to="#" className="font-bold text-tiko-primary hover:underline">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="#" className="font-bold text-tiko-primary hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </label>
+              </div>
+              {errors.agreeToTerms && (
+                <p className="text-xs text-tiko-error">{errors.agreeToTerms.message}</p>
+              )}
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-4 bg-tiko-primary text-white rounded-full font-outfit font-bold text-lg hover:bg-tiko-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-tiko-primary/20 flex items-center justify-center gap-2 mt-2"
+              disabled={isSubmitting}
+              className="w-full py-4 bg-tiko-primary text-white rounded-full font-outfit font-bold text-lg hover:bg-tiko-primary/90 active:scale-[0.98] disabled:opacity-60 transition-all shadow-lg shadow-tiko-primary/20 flex items-center justify-center gap-2 mt-2"
             >
-              Create Account
+              {isSubmitting ? 'Creating Account…' : 'Create Account'}
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
 

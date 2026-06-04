@@ -3,6 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import interiorDesign from '../assets/Interior Design.webp';
+import api from '../api/axios';
+import toast from 'react-hot-toast';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -16,16 +19,20 @@ const ContactPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
 
-  const onSubmit = (data: ContactFormData) => {
-    console.log('Contact form data:', data);
-    // Handle form submission (e.g., send to API)
-    reset();
+  const onSubmit = async (data: ContactFormData) => {
+    try {
+      await api.post('/contact', data);
+      toast.success('Your message has been sent successfully!');
+      reset();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to send message'));
+    }
   };
 
   return (
@@ -61,7 +68,7 @@ const ContactPage: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-tiko-on-surface uppercase tracking-wider mb-2">Inquiries</h4>
-                  <p className="text-sm text-tiko-on-surface-variant">hello@tiko.com<br />+962 79 000 0000</p>
+                  <p className="text-sm text-tiko-on-surface-variant">tiko94307@gmail.com<br />+201104826631</p>
                 </div>
               </div>
             </div>
@@ -107,9 +114,10 @@ const ContactPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-4 bg-tiko-primary text-white font-bold rounded-xl hover:bg-tiko-primary/90 active:scale-[0.98] transition-all shadow-md shadow-tiko-primary/20 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-tiko-primary text-white font-bold rounded-xl hover:bg-tiko-primary/90 active:scale-[0.98] disabled:opacity-60 transition-all shadow-md shadow-tiko-primary/20 flex items-center justify-center gap-2"
                 >
-                  <span>SEND MESSAGE</span>
+                  <span>{isSubmitting ? 'SENDING...' : 'SEND MESSAGE'}</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>

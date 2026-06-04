@@ -224,18 +224,21 @@ model OrderItem {
 }
 
 model Payment {
-  id                   String        @id @default(uuid())
-  orderId              String        @unique
-  method               PaymentMethod
-  status               PaymentStatus @default(PENDING)
-  amount               Int
-  paidAt               DateTime?
-  instapayReference    String?
-  transactionImageUrl  String?
-  gatewayTransactionId String?
-  gatewayPayload       Json?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                     String        @id @default(uuid())
+  orderId                String        @unique
+  method                 PaymentMethod
+  status                 PaymentStatus @default(PENDING)
+  amount                 Int
+  paidAt                 DateTime?
+  instapayReference      String?
+  instapaySenderEmail    String?
+  instapaySenderPhone    String?
+  instapayConfigSnapshot Json?
+  transactionImageUrl    String?
+  gatewayTransactionId   String?
+  gatewayPayload         Json?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
@@ -264,4 +267,13 @@ model StoreSettings {
   notificationsEnabled Boolean @default(true)
   defaultLocale       String   @default("en")
   updatedAt           DateTime @updatedAt
+}
+
+model PaymentMethodConfig {
+  id        String   @id // e.g. "CASH", "INSTAPAY"
+  name      String
+  isEnabled Boolean  @default(true)
+  config    Json?    // e.g. { qrCodeUrl, email, phone, paymentLink }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

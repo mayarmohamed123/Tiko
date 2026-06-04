@@ -116,4 +116,31 @@ export const uploadUserAvatar = async (
   });
 };
 
+export const uploadSettingsImage = async (
+  buffer: Buffer,
+  key: string
+): Promise<string> => {
+  if (!isCloudinaryConfigured()) {
+    throw new Error('CLOUDINARY_NOT_CONFIGURED');
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `tiko/settings/${key}`,
+        resource_type: 'image',
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error('Cloudinary upload failed'));
+          return;
+        }
+        resolve(result.secure_url);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
 export default cloudinary;

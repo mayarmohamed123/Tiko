@@ -166,8 +166,26 @@ export const createOrder = async (
   const taxAmount = Math.round(subtotal * taxRate);
   const totalAmount = subtotal + deliveryFee + taxAmount;
 
-  if (data.paymentMethod === 'INSTAPAY' && !data.instapayReference) {
-    throw new Error('INSTAPAY_REFERENCE_REQUIRED');
+  let instapayConfigSnapshot: any = null;
+
+  if (data.paymentMethod === 'INSTAPAY') {
+    if (!data.instapayScreenshotUrl) {
+      throw new Error('INSTAPAY_SCREENSHOT_REQUIRED');
+    }
+    if (
+      (!data.instapaySenderEmail || !data.instapaySenderEmail.trim()) &&
+      (!data.instapaySenderPhone || !data.instapaySenderPhone.trim())
+    ) {
+      throw new Error('INSTAPAY_SENDER_INFO_REQUIRED');
+    }
+
+    // Retrieve active Instapay config to snapshot it
+    const instapayConfig = await prisma.paymentMethodConfig.findUnique({
+      where: { id: 'INSTAPAY' },
+    });
+    if (instapayConfig && instapayConfig.config) {
+      instapayConfigSnapshot = instapayConfig.config;
+    }
   }
 
   let customerId: string | undefined;
@@ -226,6 +244,10 @@ export const createOrder = async (
             status: 'PENDING',
             amount: totalAmount,
             instapayReference: data.instapayReference,
+            instapaySenderEmail: data.instapaySenderEmail,
+            instapaySenderPhone: data.instapaySenderPhone,
+            instapayConfigSnapshot: instapayConfigSnapshot,
+            transactionImageUrl: data.instapayScreenshotUrl,
           },
         },
         statusHistory: {
@@ -254,7 +276,7 @@ export const createOrder = async (
     orderNumber: order.orderNumber,
     status: order.status,
     total: order.totalAmount / 100,
-    paymentMethod: order.payment?.method,
+    paymentMethod: (order as any).payment?.method,
   };
 };
 
