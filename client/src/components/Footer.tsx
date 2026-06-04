@@ -109,7 +109,7 @@ const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-tiko-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-tiko-on-surface-variant">© 2024 Tiko. All rights reserved.</p>
+          <p className="text-xs text-tiko-on-surface-variant">© 2026 Tiko. All rights reserved.</p>
           <div className="flex items-center gap-6">
             {['Privacy Policy', 'Terms of Service'].map((item) => (
               <Link key={item} to="#" className="text-xs text-tiko-on-surface-variant hover:text-tiko-primary transition-colors">

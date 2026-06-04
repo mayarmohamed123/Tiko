@@ -67,7 +67,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
             <div className="p-3 bg-tiko-surface-container-low rounded-xl">
               <DollarSign className="w-4 h-4 text-tiko-primary mb-1" />
               <p className="text-xs text-tiko-on-surface-variant">Total spent</p>
-              <p className="font-bold">${customer.totalSpent.toFixed(2)}</p>
+              <p className="font-bold">{customer.totalSpent.toFixed(2)} EGP</p>
             </div>
           </div>
 
@@ -87,7 +87,7 @@ export const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({
                 {orders.map((o) => (
                   <li key={o.id} className="p-3 border rounded-xl text-sm flex justify-between">
                     <span className="font-medium">{o.orderNumber}</span>
-                    <span>${o.total.toFixed(2)} — {o.status}</span>
+                    <span>{o.total.toFixed(2)} EGP — {o.status}</span>
                   </li>
                 ))}
               </ul>

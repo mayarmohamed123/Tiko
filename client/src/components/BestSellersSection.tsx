@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { productService } from '../services';
 import { useCart } from '../context/useCart';
 import type { ApiProduct } from '../types';
+import bestSellerPhoto from '../assets/AB6AXU~1.webp';
 
 // ─── Shimmer skeleton ─────────────────────────────────────────────────────────
 const SkeletonItem: React.FC = () => (
@@ -74,16 +75,11 @@ const BestSellerRow: React.FC<BestSellerItemProps> = ({ product }) => {
 };
 
 // ─── Feature image (first bestseller's primary image) ────────────────────────
-const FeatureImage: React.FC<{ product?: ApiProduct }> = ({ product }) => {
-  const src = product?.image ?? product?.images?.[0]?.url ?? undefined;
+const FeatureImage: React.FC = () => {
   return (
     <div className="relative">
       <div className="rounded-3xl overflow-hidden aspect-4/5 max-w-sm mx-auto lg:max-w-none shadow-xl bg-tiko-surface-container-low">
-        {src ? (
-          <img src={src} alt={product?.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-tiko-surface-container-high animate-pulse" />
-        )}
+        <img src={bestSellerPhoto} alt="Bestseller Collection" className="w-full h-full object-cover" />
       </div>
 
       {/* Testimonial card */}
@@ -155,7 +151,7 @@ const BestSellersSection: React.FC = () => {
           </div>
 
           {/* Right: Feature image */}
-          <FeatureImage product={sellers[0]} />
+          <FeatureImage />
         </div>
       </div>
     </section>

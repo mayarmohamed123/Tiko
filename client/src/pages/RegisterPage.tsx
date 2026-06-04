@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import interiorDesign from '../assets/Interior Design.webp';
+import interiorDesign from '../assets/Interior Designn.png';
 
 import { registerSchema, type RegisterFormValues } from '../utils/validation';
 import { authService } from '../services';
@@ -42,14 +42,14 @@ const RegisterPage: React.FC = () => {
       <div className="hidden lg:flex lg:w-5/12 flex-col items-center justify-center gap-6 p-10 bg-tiko-surface-container-low border-r border-tiko-outline-variant">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-tiko-primary">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
               </svg>
             </span>
             <span className="text-4xl font-outfit font-bold text-tiko-primary tracking-tight">Tiko</span>
-          </div>
+          </Link>
           <p className="text-sm text-tiko-on-surface-variant max-w-xs">
             Quiet Luxury meets Neighborhood Warmth. Join our community for a curated shopping experience.
           </p>
@@ -67,7 +67,7 @@ const RegisterPage: React.FC = () => {
 
         {/* Footer */}
         <p className="text-[9px] font-outfit font-bold text-tiko-on-surface-variant uppercase tracking-widest">
-          © 2024 Tiko. All rights reserved.
+          © 2026 Tiko. All rights reserved.
         </p>
       </div>
 
@@ -76,14 +76,14 @@ const RegisterPage: React.FC = () => {
         <div className="max-w-xl w-full mx-auto space-y-6">
 
           {/* On mobile: show minimal logo since left panel is hidden */}
-          <div className="flex items-center gap-2 lg:hidden mb-4">
+          <Link to="/" className="flex items-center gap-2 lg:hidden mb-4 hover:opacity-80 transition-opacity">
             <span className="text-tiko-primary">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
               </svg>
             </span>
             <span className="text-2xl font-outfit font-bold text-tiko-primary tracking-tight">Tiko</span>
-          </div>
+          </Link>
 
           <div className="space-y-2">
             <h2 className="text-3xl lg:text-4xl font-outfit font-bold text-tiko-on-surface">Create Account</h2>

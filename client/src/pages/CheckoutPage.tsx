@@ -180,6 +180,21 @@ const OrderSummary: React.FC = () => {
   );
 };
 
+// Helper to generate a unique guest email if the user is not authenticated
+const getOrCreateGuestEmail = (): string => {
+  let guestEmail = localStorage.getItem("tiko_guest_email");
+  if (!guestEmail) {
+    const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+    guestEmail = `guest_${uuid}@guest.local`;
+    localStorage.setItem("tiko_guest_email", guestEmail);
+  }
+  return guestEmail;
+};
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 const CheckoutPage: React.FC = () => {
   const [step] = useState(1);
@@ -301,7 +316,7 @@ const CheckoutPage: React.FC = () => {
         instapaySenderEmail: data.paymentMethod === "INSTAPAY" ? data.instapaySenderEmail : undefined,
         instapaySenderPhone: data.paymentMethod === "INSTAPAY" ? data.instapaySenderPhone : undefined,
         instapayScreenshotUrl: instapayScreenshotUrl,
-        guestEmail: user?.email || "guest@tiko.com",
+        guestEmail: user?.email || getOrCreateGuestEmail(),
       };
 
       const orderResult = await orderService.create(payload);

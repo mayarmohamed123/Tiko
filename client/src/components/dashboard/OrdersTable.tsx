@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { AdminOrder } from '../../types/admin';
 import OrderDetailModal from './OrderDetailModal';
 
@@ -120,7 +121,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                     {order.payment}
                   </td>
                 )}
-                <td className="px-6 py-5 whitespace-nowrap text-sm font-bold text-tiko-on-surface">${order.total.toFixed(2)}</td>
+                <td className="px-6 py-5 whitespace-nowrap text-sm font-bold text-tiko-on-surface">{order.total.toFixed(2)} EGP</td>
                 <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => setSelectedOrderId(order.orderId)}
@@ -171,9 +172,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         </div>
       ) : (
         <div className="p-4 bg-tiko-background border-t border-tiko-surface-container-high text-center">
-          <button className="text-sm font-bold text-tiko-primary hover:text-tiko-primary-container">
+          <Link to="/dashboard/orders" className="text-sm font-bold text-tiko-primary hover:text-tiko-primary-container">
             View All Orders
-          </button>
+          </Link>
         </div>
       )}
 

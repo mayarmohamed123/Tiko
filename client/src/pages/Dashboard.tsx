@@ -25,7 +25,7 @@ const toCSV = (orders: ReturnType<typeof mapOrderListItemToAdmin>[]) => {
     o.customer,
     o.status,
     o.payment ?? '',
-    (o.total / 100).toFixed(2),
+    o.total.toFixed(2),
     o.date,
   ]);
   const escape = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;

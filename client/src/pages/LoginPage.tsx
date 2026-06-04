@@ -71,7 +71,7 @@ const LoginPage: React.FC = () => {
 
       <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 md:p-12 lg:p-16 xl:p-20 2xl:p-24 bg-tiko-surface overflow-y-auto">
         <div className="flex justify-between items-center mb-12 lg:mb-0">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-tiko-primary">
               <svg
                 width="28"
@@ -84,7 +84,7 @@ const LoginPage: React.FC = () => {
             <span className="text-2xl font-outfit font-bold text-tiko-primary tracking-tight">
               Tiko
             </span>
-          </div>
+          </Link>
         </div>
 
         <div className="max-w-md w-full mx-auto space-y-8 py-8 lg:py-0">

@@ -80,7 +80,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
 
                   {/* Total Spent */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-tiko-primary">
-                    ${cust.totalSpent.toFixed(2)}
+                    {cust.totalSpent.toFixed(2)} EGP
                   </td>
 
                   {/* Join Date */}
