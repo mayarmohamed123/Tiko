@@ -5,13 +5,12 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import imagerySection from "../assets/Imagery Section (Left Side for Desktop).png";
 import { loginSchema, type LoginFormValues } from "../utils/validation";
-import { authService } from "../services";
 import { useAuth } from "../hooks/useAuth";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { login } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -27,11 +26,10 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setSubmitting(true);
     try {
-      const res = await authService.login({
-        email: data.email,
-        password: data.password,
-      });
-      setUser(res.user);
+      // Use context.login() so the token is stored in tokenStore for Safari.
+      // Safari blocks cross-origin httpOnly cookies, so the token must be
+      // sent as Authorization: Bearer on every request instead.
+      const res = await login(data.email, data.password);
       toast.success("Signed in successfully");
       if (res.user.role === "ADMIN") {
         navigate("/dashboard");

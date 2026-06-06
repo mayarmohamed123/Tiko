@@ -24,9 +24,28 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Allow if origin is in the whitelist, or if it's a Vercel preview URL for this project
+    const isAllowed =
+      allowedOrigins.some(o => o === origin) ||
+      /^https:\/\/tiko[a-zA-Z0-9-]*\.vercel\.app$/.test(origin);
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Blocked origin: ${origin}`);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
+  exposedHeaders: ['set-cookie'],
 }));
 app.use(morgan('dev'));
 app.use(compression());

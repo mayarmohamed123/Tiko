@@ -23,10 +23,14 @@ import { uploadUserAvatar } from '../utils/cloudinary.js';
 // ─── Cookie config ────────────────────────────────────────────────────────────
 const COOKIE_NAME = 'auth_token';
 const isProd = process.env.NODE_ENV === 'production';
+
+// IMPORTANT: Cross-origin cookies (different domains on Vercel) require:
+//   sameSite: 'none' + secure: true  — otherwise Safari & modern browsers block them.
+// Safari (ITP) is extra strict; see README for the same-domain workaround if needed.
 const cookieOptions = {
   httpOnly: true,
-  secure: isProd,
-  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+  secure: true,          // Always true — Vercel always serves HTTPS
+  sameSite: 'none' as const, // Required for cross-origin cookie sending
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -92,12 +96,16 @@ export const login = async (req: Request, res: Response) => {
     const data = loginSchema.parse(req.body);
     const result = await loginUser(data);
 
-    // Set token exclusively in httpOnly cookie — never in response body
+    // Set token in httpOnly cookie (preferred — works on Chrome/Firefox)
     res.cookie(COOKIE_NAME, result.token, cookieOptions);
 
+    // Also return token in body so Safari (iOS/iPadOS) can store it client-side
+    // and send it as Authorization: Bearer on subsequent requests.
+    // Safari's ITP blocks cross-origin httpOnly cookies even with sameSite=none.
     res.status(200).json({
       message: 'Login successful',
       user: result.user,
+      token: result.token,
     });
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -111,8 +119,8 @@ export const login = async (req: Request, res: Response) => {
 export const logout = (_req: Request, res: Response) => {
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
   });
   res.status(200).json({ message: 'Logged out successfully.' });
 };

@@ -8,6 +8,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   message: string;
   user: AuthUser;
+  token?: string; // Returned for Safari cross-origin Bearer token fallback
 }
 
 export interface AuthUser {

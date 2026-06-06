@@ -7,6 +7,7 @@ export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   setUser: (user: User | null) => void;
+  login: (email: string, password: string) => Promise<import('../types').LoginResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }

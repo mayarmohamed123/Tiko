@@ -11,8 +11,13 @@ interface JwtPayload {
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 // Reads the httpOnly 'auth_token' cookie, verifies the JWT,
 // and attaches { userId, role } to req.user for downstream handlers.
+// Falls back to Authorization: Bearer <token> header for Safari (ITP blocks
+// cross-origin httpOnly cookies even with sameSite=none on iOS/iPadOS).
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies?.auth_token;
+  const cookieToken = req.cookies?.auth_token;
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = cookieToken || bearerToken;
 
   if (!token) {
     return res.status(401).json({ message: 'Authentication required.' });
