@@ -59,15 +59,7 @@ const ForgotPasswordPage: React.FC = () => {
       <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 md:p-12 lg:p-16 xl:p-20 bg-tiko-surface overflow-y-auto">
         <div className="flex justify-between items-center mb-12 lg:mb-0">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <span className="text-tiko-primary">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="currentColor">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-              </svg>
-            </span>
+            <img src="/logo.png" alt="Tiko Logo" className="w-10 h-10 object-contain rounded-full border border-tiko-outline-variant bg-white" />
             <span className="text-2xl font-outfit font-bold text-tiko-primary tracking-tight">
               Tiko
             </span>

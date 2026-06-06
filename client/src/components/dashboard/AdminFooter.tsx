@@ -28,7 +28,7 @@ export const AdminFooter: React.FC = () => {
         <div className="max-w-xs">
           <h5 className="font-bold text-tiko-on-surface uppercase tracking-wider mb-4 text-xs">Support</h5>
           <p className="mb-4">Need help? Visit our help center or contact our premium support team.</p>
-          <p className="text-xs">&copy; 2024 Tiko. All rights reserved.</p>
+          <p className="text-xs">&copy; 2026 Tiko. All rights reserved.</p>
         </div>
       </div>
     </footer>

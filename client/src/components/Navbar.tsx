@@ -59,11 +59,7 @@ const Navbar: React.FC = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-tiko-primary">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-              </svg>
-            </span>
+            <img src="/logo.png" alt="Tiko Logo" className="w-8 h-8 object-contain rounded-full border border-tiko-outline-variant bg-white" />
             <span className="text-xl font-bold text-tiko-on-surface tracking-tight">Tiko</span>
           </Link>
 

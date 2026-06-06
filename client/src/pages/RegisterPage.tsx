@@ -43,11 +43,7 @@ const RegisterPage: React.FC = () => {
         {/* Logo */}
         <div className="flex flex-col items-center gap-3 text-center">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <span className="text-tiko-primary">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-              </svg>
-            </span>
+            <img src="/logo.png" alt="Tiko Logo" className="w-12 h-12 object-contain rounded-full border border-tiko-outline-variant bg-white" />
             <span className="text-4xl font-outfit font-bold text-tiko-primary tracking-tight">Tiko</span>
           </Link>
           <p className="text-sm text-tiko-on-surface-variant max-w-xs">
@@ -77,11 +73,7 @@ const RegisterPage: React.FC = () => {
 
           {/* On mobile: show minimal logo since left panel is hidden */}
           <Link to="/" className="flex items-center gap-2 lg:hidden mb-4 hover:opacity-80 transition-opacity">
-            <span className="text-tiko-primary">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
-              </svg>
-            </span>
+            <img src="/logo.png" alt="Tiko Logo" className="w-10 h-10 object-contain rounded-full border border-tiko-outline-variant bg-white" />
             <span className="text-2xl font-outfit font-bold text-tiko-primary tracking-tight">Tiko</span>
           </Link>
 
