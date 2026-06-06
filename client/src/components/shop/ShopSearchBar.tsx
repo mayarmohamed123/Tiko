@@ -4,9 +4,19 @@ interface ShopSearchBarProps {
   value: string;
   onChange: (val: string) => void;
   categories: string[];
+  selectedCategories: string[];
+  onCategoryToggle: (cat: string) => void;
+  onClearCategories: () => void;
 }
 
-const ShopSearchBar: React.FC<ShopSearchBarProps> = ({ value, onChange, categories }) => {
+const ShopSearchBar: React.FC<ShopSearchBarProps> = ({
+  value,
+  onChange,
+  categories,
+  selectedCategories,
+  onCategoryToggle,
+  onClearCategories,
+}) => {
   return (
     <div className="w-full bg-tiko-surface border-b border-tiko-outline-variant py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -52,20 +62,33 @@ const ShopSearchBar: React.FC<ShopSearchBarProps> = ({ value, onChange, categori
 
         {/* Quick filter pills */}
         <div className="flex flex-wrap gap-2 justify-center mt-4">
-          {['All', ...categories].map((tag) => (
-            <button
-              key={tag}
-              onClick={() => onChange(tag === 'All' ? '' : tag)}
-              className={`px-4 py-1.5 rounded-full text-xs font-outfit font-bold uppercase tracking-wide border transition-all duration-150
-                ${(tag === 'All' && !value) || value === tag
-                  ? 'bg-tiko-primary text-white border-tiko-primary'
-                  : 'bg-white text-tiko-on-surface-variant border-tiko-outline-variant hover:border-tiko-primary hover:text-tiko-primary'
-                }
-              `}
-            >
-              {tag}
-            </button>
-          ))}
+          {['All', ...categories].map((tag) => {
+            const isAll = tag === 'All';
+            const isActive = isAll
+              ? selectedCategories.length === 0 && !value
+              : selectedCategories.includes(tag);
+            return (
+              <button
+                key={tag}
+                onClick={() => {
+                  if (isAll) {
+                    onChange('');
+                    onClearCategories();
+                  } else {
+                    onCategoryToggle(tag);
+                  }
+                }}
+                className={`px-4 py-1.5 rounded-full text-xs font-outfit font-bold uppercase tracking-wide border transition-all duration-150 cursor-pointer
+                  ${isActive
+                    ? 'bg-tiko-primary text-white border-tiko-primary shadow-sm'
+                    : 'bg-white text-tiko-on-surface-variant border-tiko-outline-variant hover:border-tiko-primary hover:text-tiko-primary'
+                  }
+                `}
+              >
+                {tag}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
