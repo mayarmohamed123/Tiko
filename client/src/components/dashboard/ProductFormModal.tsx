@@ -1,7 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { X, Upload } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  X,
+  Upload,
+  ImageIcon,
+  Trash2,
+  ZoomIn,
+  FileImage,
+  Info,
+} from 'lucide-react';
 import { type Product } from './ProductsTable';
 import type { Category } from '../../types';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface PendingImage {
+  file: File;
+  objectUrl: string;
+  width: number;
+  height: number;
+}
+
+interface ExistingImage {
+  id: string;
+  url: string;
+  altText: string | null;
+  sortOrder: number;
+  isPrimary: boolean;
+}
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -22,8 +47,189 @@ interface ProductFormModalProps {
     },
     files: File[]
   ) => void;
+  onDeleteImage?: (productId: string, imageId: string) => void;
   isSaving?: boolean;
+  isDeletingImage?: boolean;
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+};
+
+const getImageDimensions = (file: File): Promise<{ width: number; height: number; objectUrl: string }> =>
+  new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight, objectUrl: url });
+    img.onerror = () => resolve({ width: 0, height: 0, objectUrl: url });
+    img.src = url;
+  });
+
+// ─── Sub-component: Pending Image Card ───────────────────────────────────────
+
+interface PendingCardProps {
+  img: PendingImage;
+  index: number;
+  onDelete: (index: number) => void;
+  onPreview: (url: string, name: string) => void;
+}
+
+const PendingCard: React.FC<PendingCardProps> = ({ img, index, onDelete, onPreview }) => (
+  <div className="group relative bg-tiko-surface-container-low rounded-2xl border border-tiko-outline-variant overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+    {/* Preview thumbnail */}
+    <div className="relative aspect-square bg-tiko-surface-container overflow-hidden">
+      <img
+        src={img.objectUrl}
+        alt={img.file.name}
+        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-tiko-on-surface/0 group-hover:bg-tiko-on-surface/30 transition-all duration-200 flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => onPreview(img.objectUrl, img.file.name)}
+          className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white"
+          title="Preview"
+        >
+          <ZoomIn className="w-4 h-4 text-tiko-on-surface" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(index)}
+          className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-tiko-error/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-tiko-error"
+          title="Remove"
+        >
+          <Trash2 className="w-4 h-4 text-white" />
+        </button>
+      </div>
+      {/* NEW badge */}
+      <span className="absolute top-1.5 left-1.5 bg-tiko-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+        New
+      </span>
+    </div>
+
+    {/* Metadata */}
+    <div className="p-2.5 space-y-1">
+      <p className="text-[10px] font-semibold text-tiko-on-surface truncate" title={img.file.name}>
+        {img.file.name}
+      </p>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className="inline-flex items-center gap-0.5 text-[9px] text-tiko-on-surface-variant bg-tiko-surface-container px-1.5 py-0.5 rounded-full">
+          <Info className="w-2.5 h-2.5" />
+          {formatBytes(img.file.size)}
+        </span>
+        {img.width > 0 && (
+          <span className="inline-flex items-center gap-0.5 text-[9px] text-tiko-on-surface-variant bg-tiko-surface-container px-1.5 py-0.5 rounded-full">
+            {img.width}×{img.height}
+          </span>
+        )}
+        <span className="inline-flex items-center gap-0.5 text-[9px] text-tiko-primary bg-tiko-primary/10 px-1.5 py-0.5 rounded-full uppercase">
+          {img.file.type.split('/')[1] || 'img'}
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Sub-component: Existing Image Card ──────────────────────────────────────
+
+interface ExistingCardProps {
+  img: ExistingImage;
+  productId: string;
+  onDelete: (productId: string, imageId: string) => void;
+  onPreview: (url: string, name: string) => void;
+  isDeleting: boolean;
+}
+
+const ExistingCard: React.FC<ExistingCardProps> = ({ img, productId, onDelete, onPreview, isDeleting }) => (
+  <div className="group relative bg-tiko-surface-container-low rounded-2xl border border-tiko-outline-variant overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+    {/* Thumbnail */}
+    <div className="relative aspect-square bg-tiko-surface-container overflow-hidden">
+      <img
+        src={img.url}
+        alt={img.altText ?? 'Product image'}
+        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-tiko-on-surface/0 group-hover:bg-tiko-on-surface/30 transition-all duration-200 flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => onPreview(img.url, img.altText ?? 'Product image')}
+          className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white"
+          title="Preview"
+        >
+          <ZoomIn className="w-4 h-4 text-tiko-on-surface" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(productId, img.id)}
+          disabled={isDeleting}
+          className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-tiko-error/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-tiko-error disabled:opacity-50"
+          title="Delete from server"
+        >
+          <Trash2 className="w-4 h-4 text-white" />
+        </button>
+      </div>
+      {img.isPrimary && (
+        <span className="absolute top-1.5 left-1.5 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+          Primary
+        </span>
+      )}
+    </div>
+
+    {/* Metadata */}
+    <div className="p-2.5 space-y-1">
+      <p className="text-[10px] font-semibold text-tiko-on-surface truncate" title={img.url}>
+        {img.altText ?? `Image #${img.sortOrder + 1}`}
+      </p>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className="inline-flex items-center gap-0.5 text-[9px] text-tiko-on-surface-variant bg-tiko-surface-container px-1.5 py-0.5 rounded-full">
+          Order: {img.sortOrder}
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Image Lightbox ───────────────────────────────────────────────────────────
+
+interface LightboxProps {
+  url: string;
+  name: string;
+  onClose: () => void;
+}
+
+const Lightbox: React.FC<LightboxProps> = ({ url, name, onClose }) => (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in"
+    onClick={onClose}
+  >
+    <div
+      className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center gap-3"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={onClose}
+        className="absolute -top-3 -right-3 bg-white/20 hover:bg-white/40 rounded-full p-1.5 text-white transition-colors z-10"
+      >
+        <X className="w-5 h-5" />
+      </button>
+      <img
+        src={url}
+        alt={name}
+        className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+      />
+      <p className="text-white/70 text-xs text-center px-4 truncate max-w-full">{name}</p>
+    </div>
+  </div>
+);
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
@@ -32,7 +238,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   categories,
   onAddCategory,
   onSave,
+  onDeleteImage,
   isSaving = false,
+  isDeletingImage = false,
 }) => {
   const [name, setName] = useState('');
   const [material, setMaterial] = useState('');
@@ -44,11 +252,19 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [colorInput, setColorInput] = useState('');
   const [sizes, setSizes] = useState<string[]>([]);
   const [sizeInput, setSizeInput] = useState('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset state when modal opens/closes or product changes
   useEffect(() => {
+    // Revoke old object URLs to avoid memory leaks
+    pendingImages.forEach((p) => URL.revokeObjectURL(p.objectUrl));
+
     if (editingProduct) {
       setName(editingProduct.name);
       setMaterial(editingProduct.material);
@@ -70,19 +286,75 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
     setColorInput('');
     setSizeInput('');
-    setImageFiles([]);
+    setPendingImages([]);
     setIsAddingCategory(false);
     setNewCategoryName('');
-  }, [editingProduct, categories, isOpen]);
+    setLightbox(null);
+    setIsDragging(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingProduct, isOpen]);
 
-  if (!isOpen) return null;
+  const existingImages: ExistingImage[] = editingProduct?.images ?? [];
+
+  // ─── File processing ────────────────────────────────────────────────────────
+
+  const processFiles = useCallback(async (incoming: File[]) => {
+    // Filter to images only and respect the 10-image limit
+    const imageFiles = incoming.filter((f) => f.type.startsWith('image/'));
+    if (!imageFiles.length) return;
+
+    const processed = await Promise.all(
+      imageFiles.map(async (file) => {
+        const { width, height, objectUrl } = await getImageDimensions(file);
+        return { file, objectUrl, width, height } as PendingImage;
+      })
+    );
+
+    setPendingImages((prev) => {
+      const combined = [...prev, ...processed];
+      // cap at 10
+      return combined.slice(0, 10);
+    });
+  }, []);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length) await processFiles(files);
+    // Reset the input so the same files can be re-added if needed
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemovePending = (index: number) => {
+    setPendingImages((prev) => {
+      URL.revokeObjectURL(prev[index].objectUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // ─── Drag-and-drop ──────────────────────────────────────────────────────────
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => setIsDragging(false);
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    await processFiles(files);
+  };
+
+  // ─── Submit ─────────────────────────────────────────────────────────────────
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !material.trim() || !categoryId) return;
     onSave(
       { name, material, categoryId, price, stock, description, colors, sizes },
-      imageFiles
+      pendingImages.map((p) => p.file)
     );
   };
 
@@ -93,146 +365,255 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     setIsAddingCategory(false);
   };
 
-  const existingImages = editingProduct?.images ?? [];
+  const totalNewImages = pendingImages.length;
+  const totalExistingImages = existingImages.length;
+  const totalImages = totalNewImages + totalExistingImages;
+
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tiko-on-surface/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-tiko-md border border-tiko-outline-variant shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-dm-sans">
-        <div className="p-6 border-b border-tiko-surface-container-high flex justify-between items-center bg-tiko-surface rounded-t-tiko-md">
-          <h3 className="text-xl font-outfit font-bold text-tiko-on-surface">
-            {editingProduct ? 'Modify Product Details' : 'Register New Product'}
-          </h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-tiko-surface-container rounded-full">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <>
+      {/* ── Lightbox ── */}
+      {lightbox && (
+        <Lightbox url={lightbox.url} name={lightbox.name} onClose={() => setLightbox(null)} />
+      )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Product Name</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Material</label>
-              <input
-                type="text"
-                required
-                value={material}
-                onChange={(e) => setMaterial(e.target.value)}
-                className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-              />
-            </div>
+      {/* ── Modal Backdrop ── */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-tiko-on-surface/40 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white rounded-2xl border border-tiko-outline-variant shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col font-dm-sans">
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <div className="flex justify-between items-center">
-                <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Category</label>
-                <button
-                  type="button"
-                  onClick={() => setIsAddingCategory(!isAddingCategory)}
-                  className="text-xs font-bold text-tiko-primary hover:underline"
-                >
-                  {isAddingCategory ? 'Select Existing' : '+ Add New Category'}
-                </button>
+          {/* Header */}
+          <div className="sticky top-0 z-10 px-5 sm:px-6 py-4 border-b border-tiko-surface-container-high flex justify-between items-center bg-white rounded-t-2xl">
+            <div>
+              <h3 className="text-lg sm:text-xl font-outfit font-bold text-tiko-on-surface">
+                {editingProduct ? 'Modify Product Details' : 'Register New Product'}
+              </h3>
+              {totalImages > 0 && (
+                <p className="text-xs text-tiko-on-surface-variant mt-0.5">
+                  {totalExistingImages} saved · {totalNewImages} pending upload
+                </p>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-tiko-surface-container rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6">
+
+            {/* ─── Basic fields ─────────────────────────────────────────────── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all"
+                />
               </div>
-              {isAddingCategory ? (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-                    placeholder="Category name"
-                  />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Material</label>
+                <input
+                  type="text"
+                  required
+                  value={material}
+                  onChange={(e) => setMaterial(e.target.value)}
+                  className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Category</label>
                   <button
                     type="button"
-                    onClick={handleCreateCategory}
-                    className="px-4 py-3 bg-tiko-primary text-white text-xs font-bold rounded-xl"
+                    onClick={() => setIsAddingCategory(!isAddingCategory)}
+                    className="text-xs font-bold text-tiko-primary hover:underline"
                   >
-                    Create
+                    {isAddingCategory ? 'Select Existing' : '+ Add New Category'}
                   </button>
                 </div>
-              ) : (
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-                  required
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Price (EGP)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Stock</label>
-              <input
-                type="number"
-                min="0"
-                required
-                value={stock}
-                onChange={(e) => setStock(Number(e.target.value))}
-                className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-              />
-            </div>
-
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">
-                Product Images (Cloudinary)
-              </label>
-              {existingImages.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 mb-3">
-                  {existingImages.map((img) => (
-                    <img
-                      key={img.id}
-                      src={img.url}
-                      alt=""
-                      className="aspect-square rounded-lg object-cover border border-tiko-outline-variant"
+                {isAddingCategory ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="flex-1 px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
+                      placeholder="Category name"
                     />
-                  ))}
+                    <button
+                      type="button"
+                      onClick={handleCreateCategory}
+                      className="px-4 py-3 bg-tiko-primary text-white text-xs font-bold rounded-xl"
+                    >
+                      Create
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
+                    required
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Price (EGP)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Stock</label>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={stock}
+                  onChange={(e) => setStock(Number(e.target.value))}
+                  className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
+                />
+              </div>
+            </div>
+
+            {/* ─── Image Upload Section ──────────────────────────────────────── */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">
+                  Product Images
+                </label>
+                <span className="text-xs text-tiko-on-surface-variant">
+                  {totalImages}/10 images
+                </span>
+              </div>
+
+              {/* ── Drop zone ── */}
+              {totalImages < 10 && (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 transition-all duration-200 cursor-pointer
+                    ${isDragging
+                      ? 'border-tiko-primary bg-tiko-primary/5 scale-[1.01]'
+                      : 'border-tiko-outline-variant hover:border-tiko-primary hover:bg-tiko-primary/5'
+                    }`}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {/* Hidden file input — Apple Safari compatible approach */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,image/heif"
+                    multiple
+                    className="sr-only"
+                    onChange={handleFileChange}
+                    aria-label="Upload product images"
+                  />
+
+                  <div className={`p-3 rounded-full transition-colors ${isDragging ? 'bg-tiko-primary text-white' : 'bg-tiko-surface-container text-tiko-primary'}`}>
+                    <Upload className="w-6 h-6" />
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-tiko-on-surface">
+                      {isDragging ? 'Drop images here' : 'Click or drag & drop images'}
+                    </p>
+                    <p className="text-xs text-tiko-on-surface-variant mt-1">
+                      JPEG, PNG, WebP, HEIC · Up to {10 - totalImages} more · Select all at once
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className="px-5 py-2.5 bg-tiko-primary text-white text-xs font-bold rounded-full shadow-lg shadow-tiko-primary/20 hover:bg-tiko-primary/90 active:scale-95 transition-all"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileImage className="w-3.5 h-3.5" />
+                      Browse Files
+                    </span>
+                  </button>
                 </div>
               )}
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-tiko-outline-variant px-4 py-6 hover:border-tiko-primary">
-                <Upload className="h-6 w-6 text-tiko-primary" />
-                <span className="text-sm text-tiko-on-surface-variant">
-                  {imageFiles.length
-                    ? `${imageFiles.length} file(s) selected`
-                    : 'Click to upload (max 10)'}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => setImageFiles(Array.from(e.target.files ?? []))}
-                />
-              </label>
+
+              {/* ── Existing uploaded images grid ── */}
+              {totalExistingImages > 0 && (
+                <div>
+                  <p className="text-[11px] font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <ImageIcon className="w-3 h-3" />
+                    Saved on Server ({totalExistingImages})
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {existingImages.map((img) => (
+                      <ExistingCard
+                        key={img.id}
+                        img={img}
+                        productId={editingProduct!.id}
+                        onDelete={(pid, iid) => onDeleteImage?.(pid, iid)}
+                        onPreview={(url, n) => setLightbox({ url, name: n })}
+                        isDeleting={isDeletingImage}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Pending new images grid ── */}
+              {pendingImages.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-bold text-tiko-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Upload className="w-3 h-3" />
+                    Pending Upload ({pendingImages.length})
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {pendingImages.map((img, i) => (
+                      <PendingCard
+                        key={img.objectUrl}
+                        img={img}
+                        index={i}
+                        onDelete={handleRemovePending}
+                        onPreview={(url, n) => setLightbox({ url, name: n })}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-tiko-on-surface-variant mt-2 flex items-center gap-1">
+                    <Info className="w-3 h-3 shrink-0" />
+                    These images will be uploaded to Cloudinary when you save.
+                  </p>
+                </div>
+              )}
+
+              {/* Empty state when editing and no images */}
+              {totalImages === 0 && editingProduct && (
+                <div className="flex flex-col items-center justify-center gap-2 py-4 text-tiko-on-surface-variant">
+                  <ImageIcon className="w-8 h-8 opacity-30" />
+                  <p className="text-xs">No images yet. Use the picker above to add some.</p>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">
+            {/* ─── Colors ────────────────────────────────────────────────────── */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">
                 Available Colors
               </label>
               <div className="flex gap-2">
@@ -251,7 +632,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     }
                   }}
                   className="flex-1 px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-                  placeholder="Type a color and press Enter or comma (e.g. Clay, Sandstone)"
+                  placeholder="Type a color and press Enter (e.g. Clay, Sandstone)"
                 />
                 <button
                   type="button"
@@ -288,8 +669,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               )}
             </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">
+            {/* ─── Sizes ─────────────────────────────────────────────────────── */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">
                 Available Sizes
               </label>
               <div className="flex gap-2">
@@ -308,7 +690,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     }
                   }}
                   className="flex-1 px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm"
-                  placeholder="Type a size and press Enter or comma (e.g. S, M, L, XL)"
+                  placeholder="Type a size and press Enter (e.g. S, M, L, XL)"
                 />
                 <button
                   type="button"
@@ -345,8 +727,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               )}
             </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase">Description</label>
+            {/* ─── Description ───────────────────────────────────────────────── */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider">Description</label>
               <textarea
                 rows={3}
                 value={description}
@@ -354,22 +737,30 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm resize-none"
               />
             </div>
-          </div>
 
-          <div className="pt-4 border-t flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-6 py-3 rounded-full text-sm font-bold border">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-6 py-3 bg-tiko-primary text-white rounded-full text-sm font-bold disabled:opacity-60"
-            >
-              {isSaving ? 'Saving…' : editingProduct ? 'Update Item' : 'Register Item'}
-            </button>
-          </div>
-        </form>
+            {/* ─── Footer Actions ─────────────────────────────────────────────── */}
+            <div className="pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 rounded-full text-sm font-bold border border-tiko-outline-variant hover:bg-tiko-surface-container transition-colors order-2 sm:order-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-6 py-3 bg-tiko-primary text-white rounded-full text-sm font-bold disabled:opacity-60 hover:bg-tiko-primary/90 active:scale-95 transition-all shadow-lg shadow-tiko-primary/20 order-1 sm:order-2"
+              >
+                {isSaving
+                  ? (pendingImages.length > 0 ? `Uploading ${pendingImages.length} image(s)…` : 'Saving…')
+                  : editingProduct ? 'Update Item' : 'Register Item'}
+              </button>
+            </div>
+
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };

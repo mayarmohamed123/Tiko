@@ -37,7 +37,7 @@ export const uploadProductImage = async (
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `tiko/products/${productId}`,
-        resource_type: 'image',
+        resource_type: 'auto', // 'auto' handles HEIC/HEIF from Apple devices
         transformation: [{ quality: 'auto', fetch_format: 'auto' }],
       },
       (error, result) => {

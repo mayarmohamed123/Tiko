@@ -89,6 +89,16 @@ export const ProductsPage: React.FC = () => {
     onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete product')),
   });
 
+  const deleteImageMutation = useMutation({
+    mutationFn: ({ productId, imageId }: { productId: string; imageId: string }) =>
+      productService.deleteImage(productId, imageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      toast.success('Image deleted');
+    },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete image')),
+  });
+
   const createCategoryMutation = useMutation({
     mutationFn: categoryService.create,
     onSuccess: () => {
@@ -261,7 +271,11 @@ export const ProductsPage: React.FC = () => {
         categories={categories as Category[]}
         onAddCategory={handleAddCategory}
         onSave={handleSaveProduct}
+        onDeleteImage={(productId, imageId) =>
+          deleteImageMutation.mutate({ productId, imageId })
+        }
         isSaving={createMutation.isPending || updateMutation.isPending}
+        isDeletingImage={deleteImageMutation.isPending}
       />
 
       <ConfirmModal

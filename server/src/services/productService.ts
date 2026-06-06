@@ -195,10 +195,16 @@ export const addProductImages = async (
   const hasPrimary = product.images.some((i) => i.isPrimary);
   const maxSort = product.images.reduce((m, i) => Math.max(m, i.sortOrder), -1);
 
+  // Upload all images to Cloudinary in parallel for speed
+  const uploadResults = await Promise.all(
+    files.map((file) => uploadProductImage(file.buffer, productId))
+  );
+
+  // Insert DB records sequentially to preserve sort order integrity
   const created = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const uploaded = await uploadProductImage(file.buffer, productId);
+    const uploaded = uploadResults[i];
     const image = await prisma.productImage.create({
       data: {
         productId,
