@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface ProductGalleryProps {
   images: string[];
 }
 
+// NOTE: The parent (ProductDetailsPage) must pass key={productId} so that this
+// component remounts when the user navigates to a different product, naturally
+// resetting selectedIndex to 0 without any useEffect.
 const ProductGallery: React.FC<ProductGalleryProps> = ({ images }) => {
-  const [activeImage, setActiveImage] = useState<string | null>(images[0] ?? null);
-
-  // Sync activeImage with the first image if the images prop updates
-  useEffect(() => {
-    setActiveImage(images[0] ?? null);
-  }, [images]);
+  // Track which index is selected; stays at 0 on fresh mount (via key prop).
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  // Clamp in case images array shrinks
+  const clampedIndex = Math.min(selectedIndex, Math.max(0, images.length - 1));
+  const activeImage = images[clampedIndex] ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,9 +31,9 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images }) => {
           {images.map((img, i) => (
             <button
               key={i}
-              onClick={() => setActiveImage(img)}
+              onClick={() => setSelectedIndex(i)}
               className={`w-1/3 aspect-square rounded-2xl overflow-hidden border-2 transition-all
-                ${activeImage === img ? 'border-tiko-primary ring-2 ring-tiko-primary/20 shadow-lg' : 'border-transparent hover:border-tiko-outline-variant'}`}
+                ${clampedIndex === i ? 'border-tiko-primary ring-2 ring-tiko-primary/20 shadow-lg' : 'border-transparent hover:border-tiko-outline-variant'}`}
             >
               <img src={img || undefined} alt={`Thumb ${i}`} className="w-full h-full object-contain p-2" />
             </button>

@@ -128,12 +128,12 @@ const ProductDetailsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
         {/* Left: Gallery */}
         <div>
-          <ProductGallery images={adaptedProduct.images} />
+          <ProductGallery key={id} images={adaptedProduct.images} />
         </div>
 
         {/* Right: Info */}
         <div>
-          <ProductInfo product={adaptedProduct} />
+          <ProductInfo key={id} product={adaptedProduct} />
         </div>
       </div>
 

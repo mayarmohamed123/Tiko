@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../../context/useCart';
 import ProductAccordions from './ProductAccordions';
 
@@ -28,12 +28,6 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '');
   const [isAdding, setIsAdding] = useState(false);
   const { addItem, openCart } = useCart();
-
-  // Reset local state if active product changes
-  useEffect(() => {
-    setSelectedColor(product.colors?.[0] || '');
-    setSelectedSize(product.sizes?.[0] || '');
-  }, [product]);
 
   const handleAddToBag = () => {
     setIsAdding(true);

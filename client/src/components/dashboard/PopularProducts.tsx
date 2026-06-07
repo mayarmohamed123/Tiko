@@ -49,7 +49,7 @@ export const PopularProducts: React.FC<PopularProductsProps> = ({ data, isLoadin
             </div>
             <div className="h-1.5 bg-tiko-surface-container rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-tiko-primary to-tiko-secondary rounded-full transition-all duration-700"
+                className="h-full bg-linear-to-r from-tiko-primary to-tiko-secondary rounded-full transition-all duration-700"
                 style={{ width: `${(product.quantitySold / maxQty) * 100}%` }}
               />
             </div>

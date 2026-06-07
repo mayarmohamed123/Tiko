@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { orderService } from '../../services';
 import { getErrorMessage } from '../../utils/getErrorMessage';
-import type { OrderStatus, PaymentStatus } from '../../types';
+import type { OrderStatus, PaymentStatus, OrderDetail } from '../../types';
 
 interface OrderDetailModalProps {
   orderId: string; // the UUID id, not orderNumber
@@ -29,7 +29,7 @@ const paymentColors: Record<string, string> = {
 const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose }) => {
   const queryClient = useQueryClient();
 
-  const { data: order, isLoading, error } = useQuery({
+  const { data: order, isLoading, error } = useQuery<OrderDetail>({
     queryKey: ['admin', 'order', orderId],
     queryFn: () => orderService.getById(orderId),
     enabled: !!orderId,
@@ -82,9 +82,9 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  const payment = (order as any)?.payment;
-  const customer = (order as any)?.customer;
-  const items    = (order as any)?.items ?? [];
+  const payment = order?.payment;
+  const customer = order?.customer;
+  const items    = order?.items ?? [];
 
   return (
     /* Backdrop */
@@ -102,7 +102,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
             </h2>
             {order && (
               <p className="text-xs text-gray-400 mt-0.5 font-mono">
-                #{(order as any).orderNumber}
+                #{order.orderNumber}
               </p>
             )}
           </div>
@@ -138,12 +138,12 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-gray-400 uppercase">Status:</span>
                   <select
-                    value={(order as any).status}
+                    value={order.status}
                     onChange={(e) => handleStatusChange(e.target.value as OrderStatus)}
                     disabled={updateStatusMutation.isPending}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border border-transparent focus:ring-2 focus:ring-tiko-primary cursor-pointer transition-all ${statusColors[(order as any).status] ?? 'bg-gray-100 text-gray-600'}`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border border-transparent focus:ring-2 focus:ring-tiko-primary cursor-pointer transition-all ${statusColors[order.status] ?? 'bg-gray-100 text-gray-600'}`}
                   >
-                    {((order as any).status === 'PENDING') && (
+                    {(order.status === 'PENDING') && (
                       <option value="PENDING" className="bg-white text-gray-700 font-bold">PENDING</option>
                     )}
                     <option value="PROCESSING" className="bg-white text-gray-700 font-bold">PROCESSING</option>
@@ -174,7 +174,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
                   </div>
                 )}
                 <span className="text-xs text-gray-400 ml-auto">
-                  {new Date((order as any).placedAt).toLocaleString('en-US', {
+                  {new Date(order.placedAt).toLocaleString('en-US', {
                     month: 'short', day: 'numeric', year: 'numeric',
                     hour: '2-digit', minute: '2-digit',
                   })}
@@ -185,13 +185,13 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Customer</p>
-                  <p className="text-sm font-bold text-gray-900">{customer?.fullName ?? (order as any).shippingFullName}</p>
+                  <p className="text-sm font-bold text-gray-900">{customer?.fullName ?? order.shippingFullName}</p>
                   {customer?.email && <p className="text-xs text-gray-500">{customer.email}</p>}
-                  <p className="text-xs text-gray-500">{(order as any).shippingPhone}</p>
+                  <p className="text-xs text-gray-500">{order.shippingPhone}</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Shipping Address</p>
-                  <p className="text-sm text-gray-700">{(order as any).shippingStreet}</p>
+                  <p className="text-sm text-gray-700">{order.shippingStreet}</p>
                 </div>
               </div>
 
@@ -199,7 +199,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Items</p>
                 <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
-                  {items.map((item: any) => (
+                  {items.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 p-3 bg-white">
                       {item.imageUrl && (
                         <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100">
@@ -234,21 +234,21 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
               <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
                 <div className="flex justify-between text-gray-500">
                   <span>Subtotal</span>
-                  <span>{((order as any).subtotal / 100).toFixed(2)} EGP</span>
+                  <span>{(order.subtotal / 100).toFixed(2)} EGP</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>Delivery Fee</span>
-                  <span>{((order as any).deliveryFee / 100).toFixed(2)} EGP</span>
+                  <span>{(order.deliveryFee / 100).toFixed(2)} EGP</span>
                 </div>
-                {(order as any).taxAmount > 0 && (
+                {order.taxAmount > 0 && (
                   <div className="flex justify-between text-gray-500">
                     <span>Tax</span>
-                    <span>{((order as any).taxAmount / 100).toFixed(2)} EGP</span>
+                    <span>{(order.taxAmount / 100).toFixed(2)} EGP</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-gray-900 border-t border-gray-200 pt-2">
                   <span>Total</span>
-                  <span className="text-tiko-primary">{((order as any).totalAmount / 100).toFixed(2)} EGP</span>
+                  <span className="text-tiko-primary">{(order.totalAmount / 100).toFixed(2)} EGP</span>
                 </div>
               </div>
 
@@ -390,10 +390,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ orderId, onClose })
               )}
 
               {/* Notes */}
-              {(order as any).notes && (
+              {order.notes && (
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Customer Notes</p>
-                  <p className="text-sm text-gray-700 bg-gray-50 rounded-xl px-4 py-3">{(order as any).notes}</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 rounded-xl px-4 py-3">{order.notes}</p>
                 </div>
               )}
             </>

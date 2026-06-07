@@ -275,6 +275,7 @@ export const ProductsPage: React.FC = () => {
       />
 
       <ProductFormModal
+        key={`${isModalOpen ? 'open' : 'closed'}-${editingProduct?.id ?? 'new'}`}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         editingProduct={editingProduct}

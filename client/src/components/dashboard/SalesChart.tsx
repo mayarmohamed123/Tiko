@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   AreaChart,
   Area,
@@ -21,8 +20,17 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString('en-EG', { month: 'short', day: 'numeric' });
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    name?: string;
+  }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length && label) {
     return (
       <div className="bg-tiko-surface border border-tiko-outline-variant rounded-xl p-3 shadow-lg text-sm">
         <p className="font-bold text-tiko-on-surface mb-1">{formatDate(label)}</p>
