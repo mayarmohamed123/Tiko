@@ -18,10 +18,10 @@ const HeroSection: React.FC = () => {
       <div className="absolute inset-0 flex items-center px-6 sm:px-12 lg:px-20">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 sm:p-10 max-w-sm sm:max-w-md shadow-xl">
           <h1 className="font-outfit font-bold text-3xl sm:text-4xl text-tiko-primary leading-snug mb-4">
-            Curated for your home,
+            Curated for your style,
           </h1>
           <p className="text-sm sm:text-base text-tiko-on-surface-variant leading-relaxed mb-8">
-            Experience quiet luxury and neighborhood warmth through our thoughtfully selected pieces, delivered directly from our heart to your doorstep.
+            Experience quiet luxury and premium comfort through our thoughtfully designed garments, crafted from the finest materials and delivered to your doorstep.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Link

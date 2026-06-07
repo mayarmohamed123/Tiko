@@ -21,6 +21,7 @@ import SettingsPage from './pages/SettingsPage';
 import CustomersPage from './pages/CustomersPage';
 import { AdminLayout } from './layouts/AdminLayout';
 import { MainLayout } from './layouts/MainLayout';
+import ScrollToTop from './components/common/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Router>
+            <ScrollToTop />
             <Routes>
               {/* Main Layout Routes */}
               <Route element={<MainLayout />}>

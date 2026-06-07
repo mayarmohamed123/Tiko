@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
               <span className="text-xl font-bold text-tiko-on-surface tracking-tight">Tiko</span>
             </div>
             <p className="text-sm text-tiko-on-surface-variant leading-relaxed max-w-xs">
-              Bringing the warmth of the neighborhood and the luxury of curated design to your doorstep. From our heart to your home.
+              Bringing the warmth of the community and the luxury of premium clothing to your doorstep. From our heart to your wardrobe.
             </p>
             {/* Social Icons */}
             <div className="flex items-center gap-3">
@@ -57,10 +57,15 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-xs font-bold text-tiko-on-surface uppercase tracking-widest mb-5">Shop</h4>
             <ul className="space-y-3">
-              {['All Products', 'Furniture', 'Textiles', 'Gift Cards'].map((item) => (
-                <li key={item}>
-                  <Link to="#" className="text-sm text-tiko-on-surface-variant hover:text-tiko-primary transition-colors">
-                    {item}
+              {[
+                { name: 'All Products', path: '/shop' },
+                { name: 'Clothing', path: '/shop' },
+                { name: 'New Arrivals', path: '/#new-arrivals' },
+                { name: 'Bestsellers', path: '/#best-sellers' },
+              ].map((item) => (
+                <li key={item.name}>
+                  <Link to={item.path} className="text-sm text-tiko-on-surface-variant hover:text-tiko-primary transition-colors">
+                    {item.name}
                   </Link>
                 </li>
               ))}

@@ -85,8 +85,8 @@ const FeatureImage: React.FC = () => {
       {/* Testimonial card */}
       <div className="absolute bottom-6 left-4 right-4 lg:-left-6 lg:right-auto lg:w-80 bg-white rounded-2xl p-5 shadow-lg">
         <p className="text-sm text-tiko-on-surface leading-relaxed italic mb-3">
-          "The quality of the pieces I received exceeded my expectations. Tiko has
-          brought a sense of peace and beauty to my living room."
+          "The quality of the garments I received exceeded my expectations. Tiko has
+          brought a sense of effortless style and premium comfort to my wardrobe."
         </p>
         <p className="text-xs font-outfit font-bold text-tiko-on-surface-variant uppercase tracking-widest">
           — Sarah K., Cairo
@@ -119,8 +119,8 @@ const BestSellersSection: React.FC = () => {
                 Tiko Bestsellers:<br />Our Community's Picks
               </h2>
               <p className="text-sm lg:text-base text-tiko-on-surface-variant leading-relaxed max-w-sm">
-                These are the pieces that define the Tiko home. Discover the items
-                our neighbors love most, from artisanal textiles to timeless furniture.
+                These are the pieces that define the Tiko aesthetic. Discover the items
+                our community loves most, from premium everyday essentials to statement apparel.
               </p>
             </div>
 

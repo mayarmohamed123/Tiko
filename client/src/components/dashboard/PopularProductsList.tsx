@@ -3,24 +3,24 @@ import React from 'react';
 const popularProducts = [
   {
     id: 1,
-    name: 'Clay Hand-Poured Candle',
+    name: 'Linen Oversized Shirt',
     sold: 42,
-    price: 32.00,
-    image: 'https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=150'
+    price: 850.00,
+    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&q=80&w=150'
   },
   {
     id: 2,
-    name: 'Linen Throw Pillow',
+    name: 'Heavyweight Cotton Tee',
     sold: 28,
-    price: 45.00,
-    image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e6?auto=format&fit=crop&q=80&w=150'
+    price: 420.00,
+    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=150'
   },
   {
     id: 3,
-    name: 'Artisan Sage Soap',
+    name: 'Tailored Wool Trousers',
     sold: 22,
-    price: 12.00,
-    image: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&q=80&w=150'
+    price: 1200.00,
+    image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=150'
   }
 ];
 
