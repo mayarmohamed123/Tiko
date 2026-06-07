@@ -69,7 +69,7 @@ export const uploadTransactionImage = async (
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `tiko/transactions/${orderId}`,
-        resource_type: 'image',
+        resource_type: 'auto', // 'auto' handles HEIC/HEIF files correctly
         transformation: [{ quality: 'auto', fetch_format: 'auto' }],
       },
       (error, result) => {
@@ -101,7 +101,7 @@ export const uploadUserAvatar = async (
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `tiko/avatars/${userId}`,
-        resource_type: 'image',
+        resource_type: 'auto', // 'auto' handles HEIC/HEIF files correctly
         transformation: [{ quality: 'auto', fetch_format: 'auto', width: 250, height: 250, crop: 'fill' }],
       },
       (error, result) => {
@@ -128,7 +128,7 @@ export const uploadSettingsImage = async (
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `tiko/settings/${key}`,
-        resource_type: 'image',
+        resource_type: 'auto', // 'auto' handles HEIC/HEIF files correctly
         transformation: [{ quality: 'auto', fetch_format: 'auto' }],
       },
       (error, result) => {

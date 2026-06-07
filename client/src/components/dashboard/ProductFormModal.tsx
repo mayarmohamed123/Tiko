@@ -352,7 +352,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   // ─── File processing ──────────────────────────────────────────────────────
 
   const processFiles = useCallback(async (incoming: File[]) => {
-    const imageFiles = incoming.filter((f) => f.type.startsWith('image/'));
+    const imageFiles = incoming.filter(
+      (f) => f.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(f.name)
+    );
     if (!imageFiles.length) return;
     const processed = await Promise.all(
       imageFiles.map(async (file) => {

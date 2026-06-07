@@ -235,7 +235,7 @@ const CheckoutPage: React.FC = () => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0] ?? null;
-    if (file && file.type.startsWith('image/')) {
+    if (file && (file.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(file.name))) {
       setTransactionFile(file);
       const reader = new FileReader();
       reader.onload = (ev) => setTransactionPreview(ev.target?.result as string);
