@@ -44,7 +44,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <img
             src={product.image || undefined}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
           />
           {product.badge && (
             <span className={`absolute top-3 left-3 text-[10px] font-outfit font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${badgeColors[product.badge]}`}>

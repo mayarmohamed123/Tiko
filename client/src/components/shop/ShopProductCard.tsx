@@ -56,7 +56,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
           <img
             src={product.image || undefined}
             alt={product.name}
-            className={`w-full h-full object-cover transition-transform duration-500 ${!isSoldOut ? 'group-hover:scale-105' : 'opacity-70 grayscale-30'}`}
+            className={`w-full h-full object-contain p-2 transition-transform duration-500 ${!isSoldOut ? 'group-hover:scale-105' : 'opacity-70 grayscale-30'}`}
           />
           {/* Availability badge */}
           <span className={`absolute top-3 left-3 text-[9px] font-outfit font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${avConfig.bg} backdrop-blur-sm`}>

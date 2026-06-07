@@ -23,6 +23,7 @@ router.post(
   productImageUpload.array('images', 10),
   productController.uploadImages
 );
+router.patch('/:id/images/:imageId', adminMiddleware, productController.updateImage);
 router.delete('/:id/images/:imageId', adminMiddleware, productController.deleteImage);
 
 export default router;

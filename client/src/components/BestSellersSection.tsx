@@ -44,7 +44,7 @@ const BestSellerRow: React.FC<BestSellerItemProps> = ({ product }) => {
         <img
           src={product.image ?? product.images?.[0]?.url ?? undefined}
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain p-1"
         />
       </div>
 

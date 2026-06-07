@@ -48,4 +48,13 @@ export const productService = {
     api
       .delete<ApiMessageResponse>(`/products/${productId}/images/${imageId}`)
       .then((r) => r.data),
+
+  updateImage: (
+    productId: string,
+    imageId: string,
+    data: { isPrimary?: boolean; sortOrder?: number; altText?: string }
+  ) =>
+    api
+      .patch(`/products/${productId}/images/${imageId}`, data)
+      .then((r) => r.data),
 };

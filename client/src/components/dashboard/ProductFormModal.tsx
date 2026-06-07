@@ -7,6 +7,8 @@ import {
   ZoomIn,
   FileImage,
   Info,
+  GripVertical,
+  Star,
 } from 'lucide-react';
 import { type Product } from './ProductsTable';
 import type { Category } from '../../types';
@@ -48,6 +50,7 @@ interface ProductFormModalProps {
     files: File[]
   ) => void;
   onDeleteImage?: (productId: string, imageId: string) => void;
+  onSetPrimaryImage?: (productId: string, imageId: string) => void;
   isSaving?: boolean;
   isDeletingImage?: boolean;
 }
@@ -76,18 +79,38 @@ const getImageDimensions = (file: File): Promise<{ width: number; height: number
 interface PendingCardProps {
   img: PendingImage;
   index: number;
+  isPrimary: boolean;
   onDelete: (index: number) => void;
   onPreview: (url: string, name: string) => void;
+  onDragStart: (e: React.DragEvent, index: number) => void;
+  onDragOver: (e: React.DragEvent, index: number) => void;
+  onDrop: (e: React.DragEvent, index: number) => void;
+  dragOverIndex: number | null;
 }
 
-const PendingCard: React.FC<PendingCardProps> = ({ img, index, onDelete, onPreview }) => (
-  <div className="group relative bg-tiko-surface-container-low rounded-2xl border border-tiko-outline-variant overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+const PendingCard: React.FC<PendingCardProps> = ({
+  img, index, isPrimary, onDelete, onPreview,
+  onDragStart, onDragOver, onDrop, dragOverIndex
+}) => (
+  <div
+    draggable
+    onDragStart={(e) => onDragStart(e, index)}
+    onDragOver={(e) => onDragOver(e, index)}
+    onDrop={(e) => onDrop(e, index)}
+    className={`group relative bg-tiko-surface-container-low rounded-2xl border-2 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing
+      ${dragOverIndex === index ? 'border-tiko-primary scale-[1.02]' : isPrimary ? 'border-amber-400' : 'border-tiko-outline-variant'}`}
+  >
+    {/* Drag handle */}
+    <div className="absolute top-1.5 right-1.5 z-10 p-1 bg-black/30 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+      <GripVertical className="w-3 h-3" />
+    </div>
+
     {/* Preview thumbnail */}
     <div className="relative aspect-square bg-tiko-surface-container overflow-hidden">
       <img
         src={img.objectUrl}
         alt={img.file.name}
-        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
       />
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-tiko-on-surface/0 group-hover:bg-tiko-on-surface/30 transition-all duration-200 flex items-center justify-center gap-2">
@@ -108,10 +131,16 @@ const PendingCard: React.FC<PendingCardProps> = ({ img, index, onDelete, onPrevi
           <Trash2 className="w-4 h-4 text-white" />
         </button>
       </div>
-      {/* NEW badge */}
-      <span className="absolute top-1.5 left-1.5 bg-tiko-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-        New
-      </span>
+      {/* Primary / NEW badge */}
+      {isPrimary ? (
+        <span className="absolute top-1.5 left-1.5 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
+          <Star className="w-2.5 h-2.5" fill="currentColor" /> Primary
+        </span>
+      ) : (
+        <span className="absolute top-1.5 left-1.5 bg-tiko-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+          New
+        </span>
+      )}
     </div>
 
     {/* Metadata */}
@@ -141,20 +170,41 @@ const PendingCard: React.FC<PendingCardProps> = ({ img, index, onDelete, onPrevi
 
 interface ExistingCardProps {
   img: ExistingImage;
+  index: number;
   productId: string;
   onDelete: (productId: string, imageId: string) => void;
   onPreview: (url: string, name: string) => void;
+  onSetPrimary: (productId: string, imageId: string) => void;
   isDeleting: boolean;
+  onDragStart: (e: React.DragEvent, index: number) => void;
+  onDragOver: (e: React.DragEvent, index: number) => void;
+  onDrop: (e: React.DragEvent, index: number) => void;
+  dragOverIndex: number | null;
 }
 
-const ExistingCard: React.FC<ExistingCardProps> = ({ img, productId, onDelete, onPreview, isDeleting }) => (
-  <div className="group relative bg-tiko-surface-container-low rounded-2xl border border-tiko-outline-variant overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+const ExistingCard: React.FC<ExistingCardProps> = ({
+  img, index, productId, onDelete, onPreview, onSetPrimary,
+  isDeleting, onDragStart, onDragOver, onDrop, dragOverIndex
+}) => (
+  <div
+    draggable
+    onDragStart={(e) => onDragStart(e, index)}
+    onDragOver={(e) => onDragOver(e, index)}
+    onDrop={(e) => onDrop(e, index)}
+    className={`group relative bg-tiko-surface-container-low rounded-2xl border-2 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing
+      ${dragOverIndex === index ? 'border-tiko-primary scale-[1.02]' : img.isPrimary ? 'border-amber-400' : 'border-tiko-outline-variant'}`}
+  >
+    {/* Drag handle */}
+    <div className="absolute top-1.5 right-1.5 z-10 p-1 bg-black/30 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+      <GripVertical className="w-3 h-3" />
+    </div>
+
     {/* Thumbnail */}
     <div className="relative aspect-square bg-tiko-surface-container overflow-hidden">
       <img
         src={img.url}
         alt={img.altText ?? 'Product image'}
-        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-tiko-on-surface/0 group-hover:bg-tiko-on-surface/30 transition-all duration-200 flex items-center justify-center gap-2">
         <button
@@ -165,6 +215,16 @@ const ExistingCard: React.FC<ExistingCardProps> = ({ img, productId, onDelete, o
         >
           <ZoomIn className="w-4 h-4 text-tiko-on-surface" />
         </button>
+        {!img.isPrimary && (
+          <button
+            type="button"
+            onClick={() => onSetPrimary(productId, img.id)}
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-amber-500/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-amber-500"
+            title="Set as primary photo"
+          >
+            <Star className="w-4 h-4 text-white" />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onDelete(productId, img.id)}
@@ -176,8 +236,8 @@ const ExistingCard: React.FC<ExistingCardProps> = ({ img, productId, onDelete, o
         </button>
       </div>
       {img.isPrimary && (
-        <span className="absolute top-1.5 left-1.5 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-          Primary
+        <span className="absolute top-1.5 left-1.5 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
+          <Star className="w-2.5 h-2.5" fill="currentColor" /> Primary
         </span>
       )}
     </div>
@@ -189,7 +249,7 @@ const ExistingCard: React.FC<ExistingCardProps> = ({ img, productId, onDelete, o
       </p>
       <div className="flex items-center gap-1 flex-wrap">
         <span className="inline-flex items-center gap-0.5 text-[9px] text-tiko-on-surface-variant bg-tiko-surface-container px-1.5 py-0.5 rounded-full">
-          Order: {img.sortOrder}
+          {img.isPrimary ? '★ Primary' : `#${index + 1}`}
         </span>
       </div>
     </div>
@@ -239,6 +299,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onAddCategory,
   onSave,
   onDeleteImage,
+  onSetPrimaryImage,
   isSaving = false,
   isDeletingImage = false,
 }) => {
@@ -253,10 +314,16 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [sizes, setSizes] = useState<string[]>([]);
   const [sizeInput, setSizeInput] = useState('');
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingZone, setIsDraggingZone] = useState(false);
+
+  // Drag-to-reorder state
+  const [dragType, setDragType] = useState<'existing' | 'pending' | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -274,6 +341,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setDescription(editingProduct.description);
       setColors(editingProduct.colors ?? []);
       setSizes(editingProduct.sizes ?? []);
+      setExistingImages([...(editingProduct.images ?? [])].sort((a, b) => {
+        if (a.isPrimary) return -1;
+        if (b.isPrimary) return 1;
+        return a.sortOrder - b.sortOrder;
+      }));
     } else {
       setName('');
       setMaterial('');
@@ -283,6 +355,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setDescription('');
       setColors([]);
       setSizes([]);
+      setExistingImages([]);
     }
     setColorInput('');
     setSizeInput('');
@@ -290,11 +363,23 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     setIsAddingCategory(false);
     setNewCategoryName('');
     setLightbox(null);
-    setIsDragging(false);
+    setIsDraggingZone(false);
+    setDragType(null);
+    setDragIndex(null);
+    setDragOverIndex(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingProduct, isOpen]);
 
-  const existingImages: ExistingImage[] = editingProduct?.images ?? [];
+  // Sync existing images when product data changes (after delete/setPrimary)
+  useEffect(() => {
+    if (editingProduct?.images) {
+      setExistingImages([...(editingProduct.images ?? [])].sort((a, b) => {
+        if (a.isPrimary) return -1;
+        if (b.isPrimary) return 1;
+        return a.sortOrder - b.sortOrder;
+      }));
+    }
+  }, [editingProduct?.images]);
 
   // ─── File processing ────────────────────────────────────────────────────────
 
@@ -331,20 +416,96 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     });
   };
 
-  // ─── Drag-and-drop ──────────────────────────────────────────────────────────
+  // ─── Drag-and-drop for the DROP ZONE ────────────────────────────────────────
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDropZoneDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setIsDraggingZone(true);
   };
 
-  const handleDragLeave = () => setIsDragging(false);
+  const handleDropZoneDragLeave = () => setIsDraggingZone(false);
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDropZoneDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsDraggingZone(false);
     const files = Array.from(e.dataTransfer.files);
     await processFiles(files);
+  };
+
+  // ─── Drag-to-reorder existing images ────────────────────────────────────────
+
+  const handleExistingDragStart = (e: React.DragEvent, index: number) => {
+    setDragType('existing');
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleExistingDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragType === 'existing') setDragOverIndex(index);
+  };
+
+  const handleExistingDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    if (dragType !== 'existing' || dragIndex === null || dragIndex === targetIndex) {
+      setDragType(null);
+      setDragIndex(null);
+      return;
+    }
+
+    setExistingImages((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(dragIndex, 1);
+      updated.splice(targetIndex, 0, moved);
+      // Mark first in array as primary (optimistic)
+      return updated.map((img, i) => ({ ...img, isPrimary: i === 0 }));
+    });
+
+    // Call API to set primary — the image at position 0 after reorder
+    setExistingImages((prev) => {
+      const firstImg = prev[0];
+      if (firstImg && !firstImg.isPrimary && editingProduct && onSetPrimaryImage) {
+        onSetPrimaryImage(editingProduct.id, firstImg.id);
+      }
+      return prev;
+    });
+
+    setDragType(null);
+    setDragIndex(null);
+  };
+
+  // ─── Drag-to-reorder pending images ─────────────────────────────────────────
+
+  const handlePendingDragStart = (e: React.DragEvent, index: number) => {
+    setDragType('pending');
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handlePendingDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragType === 'pending') setDragOverIndex(index);
+  };
+
+  const handlePendingDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    if (dragType !== 'pending' || dragIndex === null || dragIndex === targetIndex) {
+      setDragType(null);
+      setDragIndex(null);
+      return;
+    }
+
+    setPendingImages((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(dragIndex, 1);
+      updated.splice(targetIndex, 0, moved);
+      return updated;
+    });
+
+    setDragType(null);
+    setDragIndex(null);
   };
 
   // ─── Submit ─────────────────────────────────────────────────────────────────
@@ -508,11 +669,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* ── Drop zone ── */}
               {totalImages < 10 && (
                 <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
+                  onDragOver={handleDropZoneDragOver}
+                  onDragLeave={handleDropZoneDragLeave}
+                  onDrop={handleDropZoneDrop}
                   className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 transition-all duration-200 cursor-pointer
-                    ${isDragging
+                    ${isDraggingZone
                       ? 'border-tiko-primary bg-tiko-primary/5 scale-[1.01]'
                       : 'border-tiko-outline-variant hover:border-tiko-primary hover:bg-tiko-primary/5'
                     }`}
@@ -529,13 +690,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     aria-label="Upload product images"
                   />
 
-                  <div className={`p-3 rounded-full transition-colors ${isDragging ? 'bg-tiko-primary text-white' : 'bg-tiko-surface-container text-tiko-primary'}`}>
+                  <div className={`p-3 rounded-full transition-colors ${isDraggingZone ? 'bg-tiko-primary text-white' : 'bg-tiko-surface-container text-tiko-primary'}`}>
                     <Upload className="w-6 h-6" />
                   </div>
 
                   <div className="text-center">
                     <p className="text-sm font-semibold text-tiko-on-surface">
-                      {isDragging ? 'Drop images here' : 'Click or drag & drop images'}
+                      {isDraggingZone ? 'Drop images here' : 'Click or drag & drop images'}
                     </p>
                     <p className="text-xs text-tiko-on-surface-variant mt-1">
                       JPEG, PNG, WebP, HEIC · Up to {10 - totalImages} more · Select all at once
@@ -558,19 +719,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* ── Existing uploaded images grid ── */}
               {totalExistingImages > 0 && (
                 <div>
-                  <p className="text-[11px] font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <p className="text-[11px] font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <ImageIcon className="w-3 h-3" />
-                    Saved on Server ({totalExistingImages})
+                    Saved Photos ({totalExistingImages}) — drag to reorder · first = primary
+                  </p>
+                  <p className="text-[10px] text-amber-600 mb-2 flex items-center gap-1">
+                    <Star className="w-3 h-3" fill="currentColor" />
+                    Drag the photo you want as the main photo to the first position
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {existingImages.map((img) => (
+                    {existingImages.map((img, i) => (
                       <ExistingCard
                         key={img.id}
                         img={img}
+                        index={i}
                         productId={editingProduct!.id}
                         onDelete={(pid, iid) => onDeleteImage?.(pid, iid)}
                         onPreview={(url, n) => setLightbox({ url, name: n })}
+                        onSetPrimary={(pid, iid) => onSetPrimaryImage?.(pid, iid)}
                         isDeleting={isDeletingImage}
+                        onDragStart={handleExistingDragStart}
+                        onDragOver={handleExistingDragOver}
+                        onDrop={handleExistingDrop}
+                        dragOverIndex={dragType === 'existing' ? dragOverIndex : null}
                       />
                     ))}
                   </div>
@@ -580,9 +751,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* ── Pending new images grid ── */}
               {pendingImages.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-bold text-tiko-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <p className="text-[11px] font-bold text-tiko-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <Upload className="w-3 h-3" />
-                    Pending Upload ({pendingImages.length})
+                    Pending Upload ({pendingImages.length}) — drag to reorder
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {pendingImages.map((img, i) => (
@@ -590,8 +761,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         key={img.objectUrl}
                         img={img}
                         index={i}
+                        isPrimary={i === 0 && existingImages.length === 0}
                         onDelete={handleRemovePending}
                         onPreview={(url, n) => setLightbox({ url, name: n })}
+                        onDragStart={handlePendingDragStart}
+                        onDragOver={handlePendingDragOver}
+                        onDrop={handlePendingDrop}
+                        dragOverIndex={dragType === 'pending' ? dragOverIndex : null}
                       />
                     ))}
                   </div>

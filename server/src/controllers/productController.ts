@@ -100,6 +100,23 @@ export const uploadImages = async (req: Request, res: Response) => {
   }
 };
 
+export const updateImage = async (req: Request, res: Response) => {
+  try {
+    const { isPrimary, sortOrder, altText } = req.body;
+    const image = await productService.updateProductImage(
+      paramId(req.params.id),
+      paramId(req.params.imageId),
+      { isPrimary, sortOrder, altText }
+    );
+    res.json(image);
+  } catch (e: unknown) {
+    if ((e as Error).message === 'IMAGE_NOT_FOUND') {
+      return res.status(404).json({ message: 'Image not found.' });
+    }
+    res.status(500).json({ message: 'Failed to update image.' });
+  }
+};
+
 export const deleteImage = async (req: Request, res: Response) => {
   try {
     await productService.softDeleteProductImage(
