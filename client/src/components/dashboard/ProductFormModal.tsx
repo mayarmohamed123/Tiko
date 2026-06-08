@@ -68,11 +68,95 @@ const formatBytes = (bytes: number): string => {
 const getImageDimensions = (file: File): Promise<{ width: number; height: number; objectUrl: string }> =>
   new Promise((resolve) => {
     const url = URL.createObjectURL(file);
+
+    // Skip trying to load dimensions for HEIC/HEIF since browsers cannot render them natively
+    const isHeic = /\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif';
+    if (isHeic) {
+      resolve({ width: 0, height: 0, objectUrl: url });
+      return;
+    }
+
     const img = new Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight, objectUrl: url });
-    img.onerror = () => resolve({ width: 0, height: 0, objectUrl: url });
+    const timer = setTimeout(() => {
+      resolve({ width: 0, height: 0, objectUrl: url });
+    }, 1500); // 1.5 second safety timeout to prevent Promise.all hangs
+
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight, objectUrl: url });
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve({ width: 0, height: 0, objectUrl: url });
+    };
     img.src = url;
   });
+
+const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> => {
+  return new Promise((resolve) => {
+    // Skip trying to compress HEIC/HEIF on the client since browsers don't natively support rendering them on canvas
+    const isHeic = /\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif';
+    if (isHeic) {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Proportional scale down
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            // Replace extension with .jpg since it's converted to jpeg
+            const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const compressedFile = new File([blob], `${baseName}.jpg`, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
 
 const sortImages = (images: ExistingImage[]): ExistingImage[] =>
   [...images].sort((a, b) => {
@@ -110,12 +194,19 @@ const PendingCard: React.FC<PendingCardProps> = ({
     <div className="absolute top-1.5 right-1.5 z-10 p-1 bg-black/30 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
       <GripVertical className="w-3 h-3" />
     </div>
-    <div className="relative aspect-square bg-tiko-surface-container overflow-hidden">
-      <img
-        src={img.objectUrl}
-        alt={img.file.name}
-        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-      />
+    <div className="relative aspect-square bg-tiko-surface-container overflow-hidden flex items-center justify-center">
+      {/\.(heic|heif)$/i.test(img.file.name) ? (
+        <div className="flex flex-col items-center justify-center text-tiko-primary gap-1">
+          <FileImage className="w-10 h-10" />
+          <span className="text-[10px] font-bold bg-tiko-primary/10 text-tiko-primary px-1.5 py-0.5 rounded-md">HEIC</span>
+        </div>
+      ) : (
+        <img
+          src={img.objectUrl}
+          alt={img.file.name}
+          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+        />
+      )}
       <div className="absolute inset-0 bg-tiko-on-surface/0 group-hover:bg-tiko-on-surface/30 transition-all duration-200 flex items-center justify-center gap-2">
         <button
           type="button"
@@ -312,6 +403,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
   const [isDraggingZone, setIsDraggingZone] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
 
   // Drag-to-reorder state
@@ -445,13 +537,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   // ─── Submit ────────────────────────────────────────────────────────────────
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !material.trim() || !categoryId) return;
-    onSave(
-      { name, material, categoryId, price, stock, description, colors, sizes },
-      pendingImages.map((p) => p.file)
-    );
+
+    setIsCompressing(true);
+    try {
+      const compressedFiles = await Promise.all(
+        pendingImages.map((p) => compressImage(p.file))
+      );
+      onSave(
+        { name, material, categoryId, price, stock, description, colors, sizes },
+        compressedFiles
+      );
+    } catch {
+      onSave(
+        { name, material, categoryId, price, stock, description, colors, sizes },
+        pendingImages.map((p) => p.file)
+      );
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleCreateCategory = () => {
@@ -569,7 +675,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,image/heif"
+                    accept="image/*, .heic, .heif"
                     multiple
                     className="sr-only"
                     onChange={handleFileChange}
@@ -748,10 +854,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 className="px-6 py-3 rounded-full text-sm font-bold border border-tiko-outline-variant hover:bg-tiko-surface-container transition-colors order-2 sm:order-1">
                 Cancel
               </button>
-              <button type="submit" disabled={isSaving}
+              <button type="submit" disabled={isSaving || isCompressing}
                 className="px-6 py-3 bg-tiko-primary text-white rounded-full text-sm font-bold disabled:opacity-60 hover:bg-tiko-primary/90 active:scale-95 transition-all shadow-lg shadow-tiko-primary/20 order-1 sm:order-2">
-                {isSaving
-                  ? (pendingImages.length > 0 ? `Uploading ${pendingImages.length} image(s)…` : 'Saving…')
+                {isSaving || isCompressing
+                  ? (isCompressing ? 'Compressing photos…' : (pendingImages.length > 0 ? `Uploading ${pendingImages.length} image(s)…` : 'Saving…'))
                   : editingProduct ? 'Update Item' : 'Register Item'}
               </button>
             </div>
