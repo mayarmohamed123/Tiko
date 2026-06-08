@@ -63,10 +63,6 @@ const ContactPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="text-sm font-bold text-tiko-on-surface uppercase tracking-wider mb-2">Our Studio</h4>
-                  <p className="text-sm text-tiko-on-surface-variant">123 Design District<br />Amman, Jordan</p>
-                </div>
-                <div>
                   <h4 className="text-sm font-bold text-tiko-on-surface uppercase tracking-wider mb-2">Inquiries</h4>
                   <p className="text-sm text-tiko-on-surface-variant">tiko94307@gmail.com<br />+201104826631</p>
                 </div>
