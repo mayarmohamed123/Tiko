@@ -29,9 +29,10 @@ const BestSellerRow: React.FC<BestSellerItemProps> = ({ product }) => {
   const handleAdd = () => {
     addItem({
       id: product.id,
+      productId: product.id,
       name: product.name,
       price: Math.round(product.price * 100), // cart stores minor units
-      image: product.image ?? product.images?.[0]?.url ?? null,
+      image: product.image ?? product.images?.[0]?.url ?? '',
       detail: product.material,
     });
     openCart();

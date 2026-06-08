@@ -14,18 +14,19 @@ router.post('/', (req, res, next) => {
   return orderController.createOrder(req, res);
 });
 
+// Temp transaction image upload — must be declared BEFORE /:id routes
+// to prevent Express matching 'upload-transaction' as an :id param
+router.post(
+  '/upload-transaction',
+  transactionUpload.single('image'),
+  orderController.uploadTempTransactionImage
+);
+
 // Transaction image upload — public (guest may upload after order placed)
 router.post(
   '/:id/transaction-image',
   transactionUpload.single('image'),
   orderController.uploadTransactionImage
-);
-
-// Temp transaction image upload (before order is placed)
-router.post(
-  '/upload-transaction',
-  transactionUpload.single('image'),
-  orderController.uploadTempTransactionImage
 );
 
 // Admin

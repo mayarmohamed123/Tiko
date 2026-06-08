@@ -102,3 +102,11 @@ export interface CreateOrderRequest {
   instapaySenderPhone?: string;
   instapayScreenshotUrl?: string;
 }
+
+export interface DeliveryZone {
+  id: string;
+  code: string;
+  name: string;
+  fee: number;
+  feeMinor: number;
+}

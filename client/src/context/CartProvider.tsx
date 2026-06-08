@@ -7,7 +7,7 @@ const CART_KEY = 'tiko_cart_v1';
 
 // Only persist the minimal fields needed to restore state.
 // We deliberately do NOT store any auth tokens, emails, or PII.
-type PersistedItem = Pick<CartItem, 'id' | 'name' | 'detail' | 'price' | 'image' | 'qty' | 'lowStock' | 'selectedColor' | 'selectedSize'>;
+type PersistedItem = Pick<CartItem, 'id' | 'productId' | 'name' | 'detail' | 'price' | 'image' | 'qty' | 'lowStock' | 'selectedColor' | 'selectedSize'>;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -19,7 +19,10 @@ const loadCart = (): CartItem[] => {
     if (!Array.isArray(parsed)) return [];
 
     // Auto-purge any cart that contains fake/non-UUID IDs (e.g. old seed data)
-    const allValid = parsed.every((item) => UUID_RE.test(item.id));
+    const allValid = parsed.every((item) => {
+      const uuidToCheck = item.productId || item.id;
+      return UUID_RE.test(uuidToCheck);
+    });
     if (!allValid) {
       localStorage.removeItem(CART_KEY);
       return [];
@@ -33,8 +36,8 @@ const loadCart = (): CartItem[] => {
 
 const saveCart = (items: CartItem[]) => {
   try {
-    const toSave: PersistedItem[] = items.map(({ id, name, detail, price, image, qty, lowStock, selectedColor, selectedSize }) => ({
-      id, name, detail, price, image, qty, lowStock, selectedColor, selectedSize
+    const toSave: PersistedItem[] = items.map(({ id, productId, name, detail, price, image, qty, lowStock, selectedColor, selectedSize }) => ({
+      id, productId, name, detail, price, image, qty, lowStock, selectedColor, selectedSize
     }));
     localStorage.setItem(CART_KEY, JSON.stringify(toSave));
   } catch {
@@ -58,11 +61,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addItem = useCallback((item: Omit<CartItem, 'qty'>) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const compositeId = `${item.productId}_${item.selectedColor || ''}_${item.selectedSize || ''}`;
+      const existing = prev.find((i) => i.id === compositeId);
       if (existing) {
-        return prev.map((i) => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
+        return prev.map((i) => i.id === compositeId ? { ...i, qty: i.qty + 1 } : i);
       }
-      return [...prev, { ...item, qty: 1 }];
+      return [...prev, { ...item, id: compositeId, qty: 1 }];
     });
   }, []);
 

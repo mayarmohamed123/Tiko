@@ -147,7 +147,7 @@ export const sendContactFormEmail = async (
 
   await transporter.sendMail({
     from: `"Tiko Contact Form" <${process.env.SMTP_USER || 'noreply@tiko.com'}>`,
-    to: 'tiko94307@gmail.com',
+    to: process.env.CONTACT_RECEIVER_EMAIL || 'tiko94307@gmail.com',
     replyTo: fromEmail,
     subject: `New Message from ${fromName} via Tiko Contact Form`,
     html: `

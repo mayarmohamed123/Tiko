@@ -1,6 +1,7 @@
 // ─── CartItem type — shared between context and consumers ─────────────────────
 export interface CartItem {
   id: string;
+  productId: string;
   name: string;
   detail: string;
   price: number;

@@ -262,10 +262,20 @@ export const createOrder = async (
     });
 
     for (const item of data.items) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: { stockQty: { decrement: item.quantity } },
-      });
+      try {
+        await tx.product.update({
+          where: {
+            id: item.productId,
+            stockQty: { gte: item.quantity },
+          },
+          data: { stockQty: { decrement: item.quantity } },
+        });
+      } catch (error: any) {
+        if (error.code === 'P2025') {
+          throw new Error('INSUFFICIENT_STOCK');
+        }
+        throw error;
+      }
     }
 
     return created;

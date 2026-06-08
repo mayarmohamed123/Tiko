@@ -27,15 +27,16 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images }) => {
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-4">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none sm:flex-wrap sm:overflow-visible">
           {images.map((img, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => setSelectedIndex(i)}
-              className={`w-1/3 aspect-square rounded-2xl overflow-hidden border-2 transition-all
-                ${clampedIndex === i ? 'border-tiko-primary ring-2 ring-tiko-primary/20 shadow-lg' : 'border-transparent hover:border-tiko-outline-variant'}`}
+              className={`w-16 h-16 sm:w-20 sm:h-20 aspect-square rounded-xl overflow-hidden border-2 bg-tiko-surface-container-low transition-all shrink-0
+                ${clampedIndex === i ? 'border-tiko-primary ring-2 ring-tiko-primary/20 shadow-md' : 'border-tiko-outline-variant/30 hover:border-tiko-outline-variant'}`}
             >
-              <img src={img || undefined} alt={`Thumb ${i}`} className="w-full h-full object-contain p-2" />
+              <img src={img || undefined} alt={`Thumb ${i}`} className="w-full h-full object-contain p-1.5" />
             </button>
           ))}
         </div>

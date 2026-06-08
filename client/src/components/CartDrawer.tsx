@@ -152,10 +152,10 @@ const CartDrawer: React.FC = () => {
             </div>
             <div className="flex justify-between text-sm text-tiko-on-surface-variant">
               <span>Delivery</span>
-              <span className="font-dm-sans text-tiko-tertiary font-bold">Free</span>
+              <span className="font-dm-sans text-tiko-on-surface-variant italic">Calculated at checkout</span>
             </div>
             <div className="flex justify-between text-base font-bold text-tiko-on-surface pt-2 border-t border-tiko-outline-variant">
-              <span>Total</span>
+              <span>Subtotal Total</span>
               <span className="font-outfit text-lg">{((subtotal) / 100).toFixed(2)} EGP</span>
             </div>
 

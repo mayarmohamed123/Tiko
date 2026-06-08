@@ -8,6 +8,9 @@ import type {
   LoginInput,
 } from '../schemas/authSchema.js';
 
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'supersecret')) {
+  throw new Error('FATAL: JWT_SECRET environment variable must be configured in production and cannot be the default fallback value.');
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 

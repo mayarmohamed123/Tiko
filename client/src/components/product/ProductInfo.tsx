@@ -38,6 +38,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
 
     addItem({
       id: product.id,
+      productId: product.id,
       name: product.name,
       price: Math.round(product.price * 100), // cart stores price in minor units (cents)
       image: product.images[0] || '',

@@ -62,7 +62,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({ current
           return (
             <Link 
               key={prod.id} 
-              to={`/product/${prod.id}`}
+              to={`/product/${prod.slug || prod.id}`}
               className="group flex flex-col gap-4"
             >
               <div className="aspect-square rounded-4xl overflow-hidden bg-tiko-surface-container-low shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:shadow-tiko-primary/5">

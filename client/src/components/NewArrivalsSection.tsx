@@ -26,6 +26,7 @@ const toProductCard = (p: ApiProduct) => ({
   price: p.price,
   image: p.image ?? p.images?.[0]?.url ?? '',
   badge: undefined as 'NEW ARRIVAL' | 'LIMITED' | 'BEST SELLER' | undefined,
+  slug: p.slug,
 });
 
 // ─── Section ──────────────────────────────────────────────────────────────────

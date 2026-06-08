@@ -7,13 +7,13 @@ import ProductRecommendations from '../components/product/ProductRecommendations
 import { productService } from '../services';
 
 const ProductDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
 
   // Fetch product details
   const { data: product, isLoading, isError } = useQuery({
-    queryKey: ['product-details', id],
-    queryFn: () => productService.getById(id || ''),
-    enabled: !!id,
+    queryKey: ['product-details', slug],
+    queryFn: () => productService.getBySlug(slug || ''),
+    enabled: !!slug,
     retry: 1,
   });
 
@@ -128,18 +128,18 @@ const ProductDetailsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
         {/* Left: Gallery */}
         <div>
-          <ProductGallery key={id} images={adaptedProduct.images} />
+          <ProductGallery key={slug} images={adaptedProduct.images} />
         </div>
 
         {/* Right: Info */}
         <div>
-          <ProductInfo key={id} product={adaptedProduct} />
+          <ProductInfo key={slug} product={adaptedProduct} />
         </div>
       </div>
 
       {/* Bottom: Recommendations */}
       <div className="mt-24">
-        <ProductRecommendations currentProductId={id} />
+        <ProductRecommendations currentProductId={product?.id} />
       </div>
     </div>
   );

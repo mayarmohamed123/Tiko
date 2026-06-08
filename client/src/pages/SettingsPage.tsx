@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { ProfileSettings } from '../components/dashboard/settings/ProfileSettings';
 import { SecuritySettings } from '../components/dashboard/settings/SecuritySettings';
 import { PaymentMethodsSettings } from '../components/dashboard/settings/PaymentMethodsSettings';
+import { DeliveryZonesSettings } from '../components/dashboard/settings/DeliveryZonesSettings';
 import { PageLoader } from '../components/common/PageLoader';
 import { authService } from '../services';
 import { getErrorMessage } from '../utils/getErrorMessage';
@@ -92,16 +93,16 @@ export const SettingsPage: React.FC = () => {
 
         <SecuritySettings onSavePassword={handleSavePassword} />
 
-        {/* Payment Methods — admin only */}
         {isAdmin && (
           <div className="space-y-3">
             <header>
               <h2 className="text-headline-lg font-outfit text-tiko-on-surface mb-0.5">Store Settings</h2>
               <p className="text-tiko-on-surface-variant text-sm">
-                Configure payment methods and store behaviour.
+                Configure payment methods, delivery zones, and store behaviour.
               </p>
             </header>
             <PaymentMethodsSettings />
+            <DeliveryZonesSettings />
           </div>
         )}
       </div>

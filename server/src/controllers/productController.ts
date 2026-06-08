@@ -31,7 +31,19 @@ export const getProduct = async (req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    const product = await productService.getProductById(paramId(req.params.id));
+    const product = await productService.getProductById(paramId(req.params.id), false);
+    res.json(product);
+  } catch (e: unknown) {
+    if ((e as Error).message === 'PRODUCT_NOT_FOUND') {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
+    res.status(500).json({ message: 'Failed to fetch product.' });
+  }
+};
+
+export const getProductByIdAdmin = async (req: Request, res: Response) => {
+  try {
+    const product = await productService.getProductById(paramId(req.params.id), true);
     res.json(product);
   } catch (e: unknown) {
     if ((e as Error).message === 'PRODUCT_NOT_FOUND') {

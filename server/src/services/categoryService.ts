@@ -20,6 +20,9 @@ export const createCategory = async (name: string, sortOrder = 0) => {
 };
 
 export const softDeleteCategory = async (id: string) => {
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) return;
+  const deletedSuffix = `-deleted-${Date.now().toString(36)}`;
   await prisma.$transaction([
     prisma.product.updateMany({
       where: { categoryId: id, deletedAt: null },
@@ -27,7 +30,11 @@ export const softDeleteCategory = async (id: string) => {
     }),
     prisma.category.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: new Date(),
+        name: `${category.name}${deletedSuffix}`,
+        slug: `${category.slug}${deletedSuffix}`,
+      },
     }),
   ]);
 };

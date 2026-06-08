@@ -103,15 +103,21 @@ export const findOrCreateCustomer = async (params: {
   });
 
   if (existing) {
-    return prisma.customer.update({
-      where: { id: existing.id },
-      data: {
-        fullName: params.fullName,
-        phone: params.phone ?? existing.phone,
-        defaultAddress: params.address ?? existing.defaultAddress,
-        userId: params.userId ?? existing.userId,
-      },
-    });
+    // If the customer profile is linked to a user, only update if the userId matches.
+    // This prevents guest checkout from altering a registered user's profile info.
+    const shouldUpdate = !existing.userId || existing.userId === params.userId;
+    if (shouldUpdate) {
+      return prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          fullName: params.fullName,
+          phone: params.phone ?? existing.phone,
+          defaultAddress: params.address ?? existing.defaultAddress,
+          userId: params.userId ?? existing.userId,
+        },
+      });
+    }
+    return existing;
   }
 
   return prisma.customer.create({

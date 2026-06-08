@@ -103,17 +103,30 @@ export const listProducts = async (params: {
 };
 
 export const getProductBySlug = async (slug: string) => {
-  const product = await prisma.product.findFirst({
+  let product = await prisma.product.findFirst({
     where: { slug, ...notDeleted, status: 'ACTIVE' },
     include: productInclude,
   });
+
+  // Fallback: If not found and the parameter is a valid UUID, try fetching by ID
+  if (!product && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(slug)) {
+    product = await prisma.product.findFirst({
+      where: { id: slug, ...notDeleted, status: 'ACTIVE' },
+      include: productInclude,
+    });
+  }
+
   if (!product) throw new Error('PRODUCT_NOT_FOUND');
   return formatProduct(product);
 };
 
-export const getProductById = async (id: string) => {
+export const getProductById = async (id: string, admin = false) => {
+  const where: Record<string, unknown> = { id, ...notDeleted };
+  if (!admin) {
+    where.status = 'ACTIVE';
+  }
   const product = await prisma.product.findFirst({
-    where: { id, ...notDeleted },
+    where,
     include: productInclude,
   });
   if (!product) throw new Error('PRODUCT_NOT_FOUND');

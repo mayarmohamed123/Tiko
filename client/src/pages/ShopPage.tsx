@@ -130,6 +130,7 @@ const ShopPage: React.FC = () => {
           ? 'Low Stock'
           : 'Available Now',
       description: p.description,
+      slug: p.slug,
     }));
   }, [dbProducts, bestSellerIds]);
 

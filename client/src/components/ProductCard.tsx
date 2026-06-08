@@ -9,6 +9,7 @@ export interface Product {
   price: number;
   image: string;
   badge?: 'NEW ARRIVAL' | 'LIMITED' | 'BEST SELLER';
+  slug: string;
 }
 
 interface ProductCardProps {
@@ -28,6 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.stopPropagation();
     addItem({
       id: product.id,
+      productId: product.id,
       name: product.name,
       price: Math.round(product.price * 100), // cart stores price in minor units (piastres)
       image: product.image || '',
@@ -38,7 +40,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-      <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
+      <Link to={`/product/${product.slug || product.id}`} className="flex flex-col flex-1">
         {/* Image */}
         <div className="relative overflow-hidden aspect-square bg-tiko-surface-container-low">
           <img

@@ -34,6 +34,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
 
     addItem({
       id: product.id,
+      productId: product.id,
       name: product.name,
       price: Math.round(product.price * 100), // cart stores price in minor units (cents/piastres)
       image: product.image || '',
@@ -50,7 +51,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
   return (
     <div className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* Link around the image and primary text info so users can click to go to details */}
-      <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
+      <Link to={`/product/${product.slug || product.id}`} className="flex flex-col flex-1">
         {/* Image */}
         <div className="relative overflow-hidden aspect-square bg-tiko-surface-container-low">
           <img

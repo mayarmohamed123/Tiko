@@ -7,9 +7,9 @@ import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "../components/Navbar";
 import { useCart } from "../context/useCart";
-import { orderService, paymentMethodService } from "../services";
+import { orderService, paymentMethodService, deliveryService } from "../services";
 import { useAuth } from "../hooks/useAuth";
-import type { CreateOrderRequest } from "../types";
+import type { CreateOrderRequest, DeliveryZone } from "../types";
 
 // ─── Validation schema ────────────────────────────────────────────────────────
 const deliverySchema = z
@@ -95,11 +95,15 @@ const StepIndicator: React.FC<{ current: number }> = ({ current }) => (
 );
 
 // ─── Order Summary sidebar ────────────────────────────────────────────────────
-const OrderSummary: React.FC = () => {
+interface OrderSummaryProps {
+  deliveryFee: number | null;
+}
+
+const OrderSummary: React.FC<OrderSummaryProps> = ({ deliveryFee }) => {
   const { items, subtotal } = useCart();
-  const deliveryFee = 3.5;
   const taxes = 0;
-  const total = subtotal / 100;
+  const subtotalEGP = subtotal / 100;
+  const total = subtotalEGP + (deliveryFee ?? 0);
 
   return (
     <div className="bg-tiko-surface-container-low rounded-2xl p-6 space-y-5 sticky top-24">
@@ -140,12 +144,16 @@ const OrderSummary: React.FC = () => {
         <div className="flex justify-between text-tiko-on-surface-variant">
           <span>Subtotal</span>
           <span className="font-dm-sans">
-            {(subtotal / 100).toFixed(2)} EGP
+            {subtotalEGP.toFixed(2)} EGP
           </span>
         </div>
         <div className="flex justify-between text-tiko-on-surface-variant">
           <span>Delivery Fee</span>
-          <span className="font-dm-sans">{deliveryFee.toFixed(2)} EGP</span>
+          {deliveryFee !== null ? (
+            <span className="font-dm-sans">{deliveryFee.toFixed(2)} EGP</span>
+          ) : (
+            <span className="font-dm-sans text-tiko-outline italic">Select a zone</span>
+          )}
         </div>
         <div className="flex justify-between text-tiko-on-surface-variant">
           <span>Taxes</span>
@@ -155,9 +163,13 @@ const OrderSummary: React.FC = () => {
 
       <div className="flex justify-between font-bold text-tiko-on-surface text-base pt-2 border-t border-tiko-outline-variant">
         <span className="font-outfit">Total Amount</span>
-        <span className="text-tiko-primary font-outfit">
-          {(total + deliveryFee).toFixed(2)} EGP
-        </span>
+        {deliveryFee !== null ? (
+          <span className="text-tiko-primary font-outfit">
+            {total.toFixed(2)} EGP
+          </span>
+        ) : (
+          <span className="text-tiko-outline font-outfit italic text-sm">—</span>
+        )}
       </div>
 
       {/* Security badge */}
@@ -199,6 +211,7 @@ const getOrCreateGuestEmail = (): string => {
 const CheckoutPage: React.FC = () => {
   const [step] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items, removeItem } = useCart();
@@ -208,6 +221,20 @@ const CheckoutPage: React.FC = () => {
     queryKey: ["payment-methods", "enabled"],
     queryFn: () => paymentMethodService.getEnabled(),
   });
+
+  // Fetch active delivery zones
+  const { data: deliveryZones = [], isLoading: isZonesLoading } = useQuery({
+    queryKey: ["delivery-zones"],
+    queryFn: () => deliveryService.list(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Auto-select first zone if only one exists
+  useEffect(() => {
+    if (deliveryZones.length === 1 && !selectedZone) {
+      setSelectedZone(deliveryZones[0]);
+    }
+  }, [deliveryZones, selectedZone]);
 
   const isCashEnabled = paymentMethods.some((m) => m.id === "CASH" && m.isEnabled);
   const isInstapayEnabled = paymentMethods.some((m) => m.id === "INSTAPAY" && m.isEnabled);
@@ -280,6 +307,12 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
+    // Require a delivery zone only when zones are available
+    if (deliveryZones.length > 0 && !selectedZone) {
+      toast.error("Please select a delivery zone.");
+      return;
+    }
+
     if (data.paymentMethod === "INSTAPAY" && !transactionFile) {
       toast.error("Please upload your transaction screenshot to confirm payment.");
       return;
@@ -303,7 +336,7 @@ const CheckoutPage: React.FC = () => {
 
       const payload: CreateOrderRequest = {
         items: items.map((item) => ({
-          productId: item.id,
+          productId: item.productId,
           quantity: item.qty,
           selectedColor: item.selectedColor,
           selectedSize: item.selectedSize,
@@ -311,6 +344,7 @@ const CheckoutPage: React.FC = () => {
         shippingFullName: data.fullName,
         shippingPhone: data.phone,
         shippingStreet: data.streetAddress,
+        deliveryZoneCode: selectedZone?.code,
         paymentMethod: data.paymentMethod,
         instapayReference: data.paymentMethod === "INSTAPAY" ? data.instapayReference : undefined,
         instapaySenderEmail: data.paymentMethod === "INSTAPAY" ? data.instapaySenderEmail : undefined,
@@ -451,6 +485,37 @@ const CheckoutPage: React.FC = () => {
                     </p>
                   )}
                 </div>
+
+                {/* Delivery Zone */}
+                {!isZonesLoading && deliveryZones.length > 0 && (
+                  <div>
+                    <label
+                      htmlFor="deliveryZone"
+                      className="block text-xs font-bold text-tiko-on-surface-variant uppercase tracking-wider mb-2">
+                      Delivery Zone
+                      <span className="ml-1 text-tiko-error font-bold">*</span>
+                    </label>
+                    <select
+                      id="deliveryZone"
+                      value={selectedZone?.code ?? ''}
+                      onChange={(e) => {
+                        const zone = deliveryZones.find((z) => z.code === e.target.value) ?? null;
+                        setSelectedZone(zone);
+                      }}
+                      className="w-full px-4 py-3 border border-tiko-outline-variant rounded-xl text-sm focus:outline-none focus:border-tiko-primary focus:ring-2 focus:ring-tiko-primary/20 transition-all bg-white text-tiko-on-surface"
+                    >
+                      <option value="" disabled>Select your governorate / area…</option>
+                      {deliveryZones.map((zone) => (
+                        <option key={zone.code} value={zone.code}>
+                          {zone.name} — {zone.fee.toFixed(2)} EGP
+                        </option>
+                      ))}
+                    </select>
+                    {deliveryZones.length > 0 && !selectedZone && (
+                      <p className="mt-1 text-xs text-tiko-error">Please select a delivery zone</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Payment Method card */}
@@ -805,7 +870,7 @@ const CheckoutPage: React.FC = () => {
 
           {/* ── Right: Order summary ── */}
           <div className="lg:col-span-1">
-            <OrderSummary />
+            <OrderSummary deliveryFee={selectedZone?.fee ?? (deliveryZones.length === 0 ? 3.5 : null)} />
           </div>
         </div>
       </div>
